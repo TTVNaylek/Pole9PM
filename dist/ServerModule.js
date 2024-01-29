@@ -23,12 +23,12 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send("Error on express server");
 });
-//Test http
+//Service HTTP
 const httpServer = http_1.default.createServer((req, res) => {
     res.writeHead(200, { "Content-Type": "text/plain" });
     res.end("Functionnal test");
 });
 //Écoute sur le port 80 le serveur web
 app.listen(PORT, HOST, () => {
-    console.log(`App is listenting on port ${HOST}:${PORT}/`);
+    console.log(`App is listenting on port ${HOST}:${PORT}`);
 });
