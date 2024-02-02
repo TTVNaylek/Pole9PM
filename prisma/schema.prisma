@@ -10,14 +10,15 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(uuid())
-  email    String @unique
-  name     String
-  password String
-  token    String
+  id          String      @id @default(uuid())
+  email       String      @unique
+  name        String
+  password    String
+  UserToken   UserToken[]
+  salt        String
 
-  otp_enabled  Boolean @default(false)
-  otp_verified Boolean @default(false)
+  otp_enabled  Boolean    @default(false)
+  otp_verified Boolean    @default(false)
 
   otp_ascii    String?
   otp_hex      String?
@@ -25,4 +26,16 @@ model User {
   otp_auth_url String?
 
   @@map(name: "users")
+}
+
+model UserToken {
+  Id              String    @id @default(uuid())
+  hashedToken     String
+  userID          String    @unique
+  User            User      @relation(fields: [userID], references: [id], onDelete: Cascade)
+  revoked         Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updateAt        DateTime  @updatedAt
+
+  @@map(name: "userToken")
 }

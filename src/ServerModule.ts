@@ -5,6 +5,7 @@
 
 //Import des dépendaces requises
 import { PrismaClient } from "@prisma/client";
+import crypto from "crypto";
 import express, {Application, NextFunction, Request, Response} from "express";
 import http from "http";
 import authRouter from "./routes/auth.route";
@@ -15,12 +16,14 @@ const HOST = "172.17.50.129";
 const app: Application = express();
 export const prisma = new PrismaClient();
 
-//Check si le serveur fonctionne correctement
-app.get('/api/healthchecker', (req: Request, res: Response) => {
-    res.status(200).json({
-      status: "success",
-      message: "Bienvenue sur le gestionnaire de mots de passe de Pole 9"
-    });
+//Texte à la racine de l'API / simple description
+app.get("/", (req: Request, res: Response) => {
+  res.status(200).json({
+    author: "Naylek_",
+    version: "0.0.3",
+    description: "API for Pole 9 Association by Kelyan Desmet",
+    message: "Bienvenue sur le gestionnaire de mots de passe de Pole 9"
+  });
 });
 
 app.use("/api/auth", authRouter);
