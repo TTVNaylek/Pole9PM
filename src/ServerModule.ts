@@ -8,12 +8,19 @@ import { PrismaClient } from "@prisma/client";
 import express, { Application, NextFunction, Request, Response } from "express";
 import http from "http";
 import authRouter from "./routes/auth.route";
+import cookie from "cookie-parser";
 
 //Déclarations des constantes nécessaires au fonctionnement du serveur web
 const PORT = 80;
 const HOST = "localhost";
 const app: Application = express();
 export const prisma = new PrismaClient();
+
+//Middleware express
+app.use(cookie());
+app.use(express.urlencoded({ extended: true }));
+//Route de l'API
+app.use("/api", authRouter);
 
 //Texte à la racine de l'API / simple description
 app.get("/", (req: Request, res: Response) => {
@@ -24,8 +31,6 @@ app.get("/", (req: Request, res: Response) => {
     message: "Bienvenue sur le gestionnaire de mots de passe de Pole 9",
   });
 });
-
-app.use("/api", authRouter);
 
 //Envoie un message si une erreur est détectée
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

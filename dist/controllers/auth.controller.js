@@ -80,7 +80,14 @@ const LoginUser = async (req, res, next) => {
             },
         });
         //Si toutes les informations sont bonnes alors le token et les infos utilisateur sont envoyés en réponse
-        res.status(200).json({
+        res
+            .status(200)
+            .cookie("webTokenCookie", webToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: true,
+        })
+            .json({
             status: "Success",
             token: webToken,
             user: userInfos,
@@ -97,11 +104,14 @@ const LoginUser = async (req, res, next) => {
 };
 //Fonction pour ajouter un nouvel utilisateur
 const AddUserAccount = async (req, res, next) => {
+    var _a;
+    //Récupère le token de l'utilisateur actuel
+    const currentUser = await validateWebToken(req.cookies.webTokenCookie);
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if (true) {
+    if (currentUser) {
         try {
-            // Vérifier si l'utilisateur est connecté
-            if (true) {
+            // Vérifier si l'utilisateur est dans le groupe admin
+            if (((_a = (await ServerModule_1.prisma.user.findUnique({ where: { id: currentUser } }))) === null || _a === void 0 ? void 0 : _a.group) === "admin") {
                 return res.status(401).json({
                     status: "Unauthorized",
                     message: "User not authenticated",
@@ -120,7 +130,7 @@ const AddUserAccount = async (req, res, next) => {
                     message: "User already exist",
                 });
             }
-            //Création salt de l'utilisateur
+            //Création du salt de l'utilisateur
             const userSalt = crypto_1.default.randomBytes(32).toString();
             //Le mot de passe entré dans le formulaire est chiffré
             const userPasswHashed = crypto_1.default
@@ -156,15 +166,15 @@ const validateWebToken = async (token) => {
         });
         //S'il n'est pas présent on s'arrete ici
         if (!dbToken) {
-            return false;
+            return null;
         }
         //Vérifie si le token n'est pas usurpé avec la public key
         const jwtToken = jsonwebtoken_1.default.verify(token, publicPem);
-        //Compare le token de la DB et celui de l'utilisateur
-        return dbToken.userID == jwtToken.sub;
+        //Compare et retrourne le token de la DB et celui de l'utilisateur
+        return dbToken.userID == jwtToken.sub ? jwtToken.sub : null;
     }
     catch (error) {
-        return false;
+        return null;
     }
 };
 //Exporte les fonctions pour auth.route

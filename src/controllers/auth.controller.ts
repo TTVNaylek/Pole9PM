@@ -59,11 +59,18 @@ const LoginUser = async (req: Request, res: Response, next: NextFunction) => {
     });
 
     //Si toutes les informations sont bonnes alors le token et les infos utilisateur sont envoyés en réponse
-    res.status(200).json({
-      status: "Success",
-      token: webToken,
-      user: userInfos,
-    });
+    res
+      .status(200)
+      .cookie("webTokenCookie", webToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: true,
+      })
+      .json({
+        status: "Success",
+        token: webToken,
+        user: userInfos,
+      });
     //En cas d'erreur un message est retourné au serveur
   } catch (error) {
     console.error(error);
@@ -80,11 +87,16 @@ const AddUserAccount = async (
   res: Response,
   next: NextFunction
 ) => {
+  //Récupère le token de l'utilisateur actuel
+  const currentUser = await validateWebToken(req.cookies.webTokenCookie);
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if (true) {
+  if (currentUser) {
     try {
-      // Vérifier si l'utilisateur est connecté
-      if (true) {
+      // Vérifier si l'utilisateur est dans le groupe admin
+      if (
+        (await prisma.user.findUnique({ where: { id: currentUser } }))
+          ?.group === "admin"
+      ) {
         return res.status(401).json({
           status: "Unauthorized",
           message: "User not authenticated",
@@ -103,7 +115,7 @@ const AddUserAccount = async (
           message: "User already exist",
         });
       }
-      //Création salt de l'utilisateur
+      //Création du salt de l'utilisateur
       const userSalt = crypto.randomBytes(32).toString();
       //Le mot de passe entré dans le formulaire est chiffré
       const userPasswHashed = crypto
@@ -139,15 +151,15 @@ const validateWebToken = async (token: string) => {
     });
     //S'il n'est pas présent on s'arrete ici
     if (!dbToken) {
-      return false;
+      return null;
     }
     //Vérifie si le token n'est pas usurpé avec la public key
     const jwtToken = jwt.verify(token, publicPem);
 
-    //Compare le token de la DB et celui de l'utilisateur
-    return dbToken.userID == jwtToken.sub;
+    //Compare et retrourne le token de la DB et celui de l'utilisateur
+    return dbToken.userID == jwtToken.sub ? jwtToken.sub : null;
   } catch (error) {
-    return false;
+    return null;
   }
 };
 
