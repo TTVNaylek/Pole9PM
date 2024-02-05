@@ -8,10 +8,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const auth_controller_1 = __importDefault(require("../controllers/auth.controller"));
 const router = express_1.default.Router();
 //Routes pour les requêtes de l'API REST
 //Connexion
-//router.post("/login", authController.LoginUser);
+router.post("/auth/login", auth_controller_1.default.LoginUser);
 //A2F
 //router.post("/otp/generate", authController.GenerateOTP);
 //router.post("/otp/verify", authController.VerifyOTP);
@@ -25,5 +26,5 @@ const router = express_1.default.Router();
 //router.post("/p9pm_ad/apass_generator", authController.);
 //router.post("/p9pm_ad/dashboard", authController.);
 //router.post("/p9pm_ad/history", authController.);
-//router.post("/p9pm_ad/add_account", authController.);
+router.post("/auth/add_account", auth_controller_1.default.AddUserAccount);
 exports.default = router;

@@ -38,3 +38,8 @@ model UserToken {
 
   @@map(name: "userToken")
 }
+
+model Groups {
+  id   String @id @default(uuid())
+  name String
+}

@@ -32,6 +32,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const fs = __importStar(require("fs"));
 //Récupère la clé privée
 const privatePem = fs.readFileSync("./key.pem");
+const publicPem = fs.readFileSync("./public.pem");
 //Fonction de connexion de l'utilisateur
 const LoginUser = async (req, res, next) => {
     //Bloc try-catch pour capturer une erreur si une se produit
@@ -44,11 +45,14 @@ const LoginUser = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({
                 status: "Email_Error",
-                message: "Incorrect e-mail"
+                message: "Incorrect e-mail",
             });
         }
         //Le mot de passe entré dans le formulaire est chiffré
-        const formPasswHashed = crypto_1.default.createHash("sha512").update(password + user.salt).digest("hex");
+        const formPasswHashed = crypto_1.default
+            .createHash("sha512")
+            .update(password + user.salt)
+            .digest("hex");
         //Si le MDP de l'utilisateur est incorrect une erreur est renvoyée
         if (user.password !== formPasswHashed) {
             return res.status(400).json({
@@ -57,14 +61,29 @@ const LoginUser = async (req, res, next) => {
             });
         }
         //Création du token utilisateur
-        let userInfos = { id: user.id, name: user.name, email: user.email };
-        const webToken = jsonwebtoken_1.default.sign(userInfos, privatePem, { algorithm: "RS256", issuer: "p9pm", subject: user.id });
-        ServerModule_1.prisma.userToken.create({ data: { userID: user.id, token: webToken } });
+        let userInfos = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            group: user.group,
+        };
+        const webToken = jsonwebtoken_1.default.sign(userInfos, privatePem, {
+            algorithm: "RS256",
+            issuer: "p9pm",
+            subject: user.id,
+        });
+        //Sauvegarde dans la DB le webToken
+        ServerModule_1.prisma.userToken.create({
+            data: {
+                userID: user.id,
+                token: webToken,
+            },
+        });
         //Si toutes les informations sont bonnes alors le token et les infos utilisateur sont envoyés en réponse
         res.status(200).json({
             status: "Success",
             token: webToken,
-            user: userInfos
+            user: userInfos,
         });
         //En cas d'erreur un message est retourné au serveur
     }
@@ -72,21 +91,81 @@ const LoginUser = async (req, res, next) => {
         console.error(error);
         res.status(500).json({
             status: "Error",
-            message: "Server Error"
+            message: "Server Error",
         });
     }
 };
-const validateWebToken = (token) => {
-    //Vérifie si le token n'est pas usurpé avec la public key
+//Fonction pour ajouter un nouvel utilisateur
+const AddUserAccount = async (req, res, next) => {
+    //Condition qui vérifie que l'utilisateur est bien connecté
+    if (true) {
+        try {
+            // Vérifier si l'utilisateur est connecté
+            if (true) {
+                return res.status(401).json({
+                    status: "Unauthorized",
+                    message: "User not authenticated",
+                });
+            }
+            //Récupère les informations de l'utilisateur qui va être inscrit
+            const { userName, userEmail, userPassword, userGroup } = req.body;
+            //Vérifie si un compte existe avec l'e-mail dans la database
+            const user = await ServerModule_1.prisma.user.findUnique({
+                where: { email: userEmail },
+            });
+            //Condition pour vérifier qu'un compte avec le mail associé n'existe pas
+            if (user) {
+                return res.status(404).json({
+                    status: "User_Error",
+                    message: "User already exist",
+                });
+            }
+            //Création salt de l'utilisateur
+            const userSalt = crypto_1.default.randomBytes(32).toString();
+            //Le mot de passe entré dans le formulaire est chiffré
+            const userPasswHashed = crypto_1.default
+                .createHash("sha512")
+                .update(userPassword + userSalt)
+                .digest("hex");
+            //Crée l'utilisateur dans la DB
+            await ServerModule_1.prisma.user.create({
+                data: {
+                    name: userName,
+                    email: userEmail,
+                    password: userPasswHashed,
+                    salt: userSalt,
+                    group: userGroup,
+                },
+            });
+            //En cas d'erreur un message est retourné au serveur
+        }
+        catch (error) {
+            console.error(error);
+            res.status(500).json({
+                status: "Error",
+                message: "Server Error",
+            });
+        }
+    }
+};
+const validateWebToken = async (token) => {
     try {
-        jsonwebtoken_1.default.verify(token, fs.readFileSync("./public.pem"));
-        return true;
+        //Vérifie que le token est bien présent dans la DB
+        const dbToken = await ServerModule_1.prisma.userToken.findFirst({
+            where: { token: token },
+        });
+        //S'il n'est pas présent on s'arrete ici
+        if (!dbToken) {
+            return false;
+        }
+        //Vérifie si le token n'est pas usurpé avec la public key
+        const jwtToken = jsonwebtoken_1.default.verify(token, publicPem);
+        //Compare le token de la DB et celui de l'utilisateur
+        return dbToken.userID == jwtToken.sub;
     }
     catch (error) {
         return false;
     }
-};
-const AddUserAccount = async (req, res, next) => {
 };
 //Exporte les fonctions pour auth.route
 exports.default = {

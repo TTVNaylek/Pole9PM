@@ -24,10 +24,10 @@ app.get("/", (req, res) => {
         author: "Naylek_",
         version: "0.0.3",
         description: "API for Pole 9 Association by Kelyan Desmet",
-        message: "Bienvenue sur le gestionnaire de mots de passe de Pole 9"
+        message: "Bienvenue sur le gestionnaire de mots de passe de Pole 9",
     });
 });
-app.use("/api/auth", auth_route_1.default);
+app.use("/api", auth_route_1.default);
 //Envoie un message si une erreur est détectée
 app.use((err, req, res, next) => {
     console.error(err.stack);

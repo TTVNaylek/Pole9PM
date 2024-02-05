@@ -8,11 +8,10 @@ import authController from "../controllers/auth.controller";
 
 const router = express.Router();
 
-
 //Routes pour les requêtes de l'API REST
 
 //Connexion
-//router.post("/login", authController.LoginUser);
+router.post("/auth/login", authController.LoginUser);
 
 //A2F
 //router.post("/otp/generate", authController.GenerateOTP);
@@ -29,6 +28,6 @@ const router = express.Router();
 //router.post("/p9pm_ad/apass_generator", authController.);
 //router.post("/p9pm_ad/dashboard", authController.);
 //router.post("/p9pm_ad/history", authController.);
-//router.post("/p9pm_ad/add_account", authController.);
+router.post("/auth/add_account", authController.AddUserAccount);
 
 export default router;

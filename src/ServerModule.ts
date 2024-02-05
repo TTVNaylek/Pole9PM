@@ -5,8 +5,7 @@
 
 //Import des dépendaces requises
 import { PrismaClient } from "@prisma/client";
-import crypto from "crypto";
-import express, {Application, NextFunction, Request, Response} from "express";
+import express, { Application, NextFunction, Request, Response } from "express";
 import http from "http";
 import authRouter from "./routes/auth.route";
 
@@ -22,11 +21,11 @@ app.get("/", (req: Request, res: Response) => {
     author: "Naylek_",
     version: "0.0.3",
     description: "API for Pole 9 Association by Kelyan Desmet",
-    message: "Bienvenue sur le gestionnaire de mots de passe de Pole 9"
+    message: "Bienvenue sur le gestionnaire de mots de passe de Pole 9",
   });
 });
 
-app.use("/api/auth", authRouter);
+app.use("/api", authRouter);
 
 //Envoie un message si une erreur est détectée
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -35,12 +34,12 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 //Service http
-const httpServer = http.createServer((req, res)=>{
-  res.writeHead(200, {"Content-Type": "text/plain"});
+const httpServer = http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
   res.end("Functionnal test");
 });
-  
+
 //Le serveur web écoute sur le host:port
 app.listen(PORT, HOST, () => {
-    console.log(`App is listenting on port ${HOST}:${PORT}/`)
+  console.log(`App is listenting on port ${HOST}:${PORT}/`);
 });
