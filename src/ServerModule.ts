@@ -12,7 +12,7 @@ import authRouter from "./routes/auth.route";
 
 //Déclarations des constantes nécessaires au fonctionnement du serveur web
 const PORT = 80;
-const HOST = "172.17.50.129";
+const HOST = "localhost";
 const app: Application = express();
 export const prisma = new PrismaClient();
 

@@ -2,43 +2,55 @@ import crypto from "crypto";
 import { Prisma } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../ServerModule";
+import jwt from "jsonwebtoken";
+import * as fs from "fs";
+
+//Récupère la clé privée
+const privatePem = fs.readFileSync("./key.pem");
+const publicPem = fs.readFileSync("./public.pem");
 
 //Fonction de connexion de l'utilisateur
-const LoginUser =async (req:Request, res: Response, next: NextFunction) => {
+const LoginUser = async (req: Request, res: Response, next: NextFunction) => {
     //Bloc try-catch pour capturer une erreur si une se produit
     try {
         //Récupère e-mail & mot de passe du formulaire de la page web
-        const {email, password, salt} = req.body;
-        //Vérifie si un compte existe avec l'e-mail
-        const user = await prisma.user.findUnique({where:{email}});
+        const {email, password} = req.body;
+        //Vérifie si un compte existe avec l'e-mail dans la database
+        const user = await prisma.user.findUnique({where:{email:email}});
         //Condition pour vérifier qu'un compte avec le mail associé existe
         if (!user) {
             return res.status(404).json({
-                status: "Error",
+                status: "Email_Error",
                 message: "Incorrect e-mail"
             });
         }
         //Le mot de passe entré dans le formulaire est chiffré
-        const formPassHashed = crypto.createHash("sha512").update(password + user.salt).digest("hex");
+        const formPasswHashed = crypto.createHash("sha512").update(password + user.salt).digest("hex");
         //Si le MDP de l'utilisateur est incorrect une erreur est renvoyée
-        if (user.password !== formPassHashed) {
-            return res.status(401).json({
-              status: "Login error",
+        if (user.password !== formPasswHashed) {
+            return res.status(400).json({
+              status: "Passw_Error",
               message: "Incorrect password",
             });
           }
-      
-          // Si le mot de passe est correct, vous pouvez envoyer une réponse réussie ici
-          res.status(200).json({
+
+        //Création du token utilisateur
+        let userInfos = {id: user.id, name: user.name, email: user.email, group:user.group};
+        const webToken = jwt.sign(
+            userInfos,
+            privatePem,
+            {algorithm:"RS256",issuer:"p9pm",subject:user.id});
+
+        //Sauvegarde dans la DB le webToken
+        prisma.userToken.create({data:{userID:user.id, token:webToken}});
+
+        //Si toutes les informations sont bonnes alors le token et les infos utilisateur sont envoyés en réponse
+        res.status(200).json({
             status: "Success",
-            user: {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              // Add other user properties you want to include
-            },
-          });
-    //En cas d'erreur un message est retourné au serveur
+            token: webToken,
+            user: userInfos
+        });
+        //En cas d'erreur un message est retourné au serveur
     } catch (error) {
         console.error(error);
         res.status(500).json({
@@ -48,13 +60,34 @@ const LoginUser =async (req:Request, res: Response, next: NextFunction) => {
     }
 };
 
+const validateWebToken = async (token: string) => {
+    try {
+        //Vérifie que le token est bien présent dans la DB
+        const dbToken = await prisma.userToken.findFirst({where:{token:token}});
+        if (!dbToken)
+        {
+            return false;
+        }
+        //Vérifie si le token n'est pas usurpé avec la public key
+        const jwtToken = jwt.verify(token, publicPem);
 
+        //Compare le token de la DB et celui de l'utilisateur
+        return dbToken.userID == jwtToken.sub;
+    }catch (error){
+        return false;
+    }
+};
 
+const AddUserAccount = async (req: Request, res: Response, next: NextFunction) => {
 
+};
+
+//Exporte les fonctions pour auth.route
 export default {
     LoginUser,
+    AddUserAccount,
     //GenerateOTP,
     //VerifyOTP,
     //ValidateOTP,
     //DisableOTP,
-  };
+};

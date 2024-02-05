@@ -15,7 +15,7 @@ const http_1 = __importDefault(require("http"));
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
 //Déclarations des constantes nécessaires au fonctionnement du serveur web
 const PORT = 80;
-const HOST = "172.17.50.129";
+const HOST = "localhost";
 const app = (0, express_1.default)();
 exports.prisma = new client_1.PrismaClient();
 //Texte à la racine de l'API / simple description
