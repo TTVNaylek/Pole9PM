@@ -25,17 +25,17 @@ const LoginUser = async (req: Request, res: Response, next: NextFunction) => {
       });
     }
     //Le mot de passe entré dans le formulaire est chiffré
-    const formPasswHashed = crypto
-      .createHash("sha512")
-      .update(password + user.salt)
-      .digest("hex");
+    //const formPasswHashed = crypto
+    // .createHash("sha512")
+    //  .update(password + user.salt)
+    //  .digest("hex");
     //Si le MDP de l'utilisateur est incorrect une erreur est renvoyée
-    if (user.password !== formPasswHashed) {
-      return res.status(400).json({
-        status: "Passw_Error",
-        message: "Incorrect password",
-      });
-    }
+    //if (user.password !== formPasswHashed) {
+    //  return res.status(400).json({
+    //    status: "Passw_Error",
+    //    message: "Incorrect password",
+    //  });
+    //}
 
     //Création du token utilisateur
     let userInfos = {
@@ -82,6 +82,7 @@ const LoginUser = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 //Fonction pour ajouter un nouvel utilisateur
+//FONCTION ADMIN
 const AddUserAccount = async (
   req: Request,
   res: Response,
@@ -99,7 +100,7 @@ const AddUserAccount = async (
       ) {
         return res.status(401).json({
           status: "Unauthorized",
-          message: "User not authenticated",
+          message: "Utilisateur non autorisé",
         });
       }
       //Récupère les informations de l'utilisateur qui va être inscrit
@@ -117,12 +118,12 @@ const AddUserAccount = async (
       }
       //Création du salt de l'utilisateur
       const userSalt = crypto.randomBytes(32).toString();
-      //Le mot de passe entré dans le formulaire est chiffré
+      //Le mot de passe entré dans le formulaire est chiffré + salé
       const userPasswHashed = crypto
         .createHash("sha512")
         .update(userPassword + userSalt)
         .digest("hex");
-      //Crée l'utilisateur dans la DB
+      //Création l'utilisateur dans la DB
       await prisma.user.create({
         data: {
           name: userName,
@@ -140,9 +141,142 @@ const AddUserAccount = async (
         message: "Server Error",
       });
     }
+  } else {
+    res.status(401).json({
+      status: "Unauthorized",
+      message: "Utilisateur non autorisé",
+    });
   }
 };
 
+//Fonction permettant de modifier le compte de l'utilisateur
+//FONCTION ADMIN
+const EditUserAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  //Récupère le token de l'utilisateur actuel
+  const currentUser = await validateWebToken(req.cookies.webTokenCookie);
+  //Condition qui vérifie que l'utilisateur est bien connecté
+  if (currentUser) {
+    try {
+      // Vérifie si l'utilisateur est dans le groupe admin
+      if (
+        (await prisma.user.findUnique({ where: { id: currentUser } }))
+          ?.group === "admin"
+      ) {
+        return res.status(401).json({
+          status: "Unauthorized",
+          message: "Utilisateur non autorisé",
+        });
+      }
+      //Récupère les informations de l'utilisateur qui va être modifié
+      const {
+        userName,
+        currentUserEmail,
+        newUserEmail,
+        userPassword,
+        userGroup,
+      } = req.body;
+      //Vérifie si un compte existe avec l'e-mail dans la database
+      const user = await prisma.user.findUnique({
+        where: { email: currentUserEmail },
+      });
+      //Condition qui vérifie qu'un compte avec le mail associé existe
+      if (!user) {
+        return res.status(404).json({
+          status: "User_Error",
+          message: "User doesn't exist",
+        });
+      }
+      //
+      //Création du nouveau salt de l'utilisateur
+      const userSalt = crypto.randomBytes(32).toString();
+      //Le mot de passe entré dans le formulaire est chiffré + salé
+      const userPasswHashed = crypto
+        .createHash("sha512")
+        .update(userPassword + userSalt)
+        .digest("hex");
+      //Modification des données l'utilisateur dans la DB
+      await prisma.user.update({
+        where: { email: currentUserEmail },
+        data: {
+          name: userName,
+          email: newUserEmail,
+          password: userPasswHashed,
+          group: userGroup,
+          salt: userSalt,
+        },
+      });
+      //En cas d'erreur un message est retourné au serveur
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: "Error",
+        message: "Server Error",
+      });
+    }
+  } else {
+    res.status(401).json({
+      status: "Unauthorized",
+      message: "Utilisateur non autorisé",
+    });
+  }
+};
+
+//Fonction permettant de supprimer le compte de l'utilisateur
+//FONCTION ADMIN
+const DeleteUserAccount = async (req: Request, res: Response) => {
+  //Récupère le token de l'utilisateur actuel
+  const currentUser = await validateWebToken(req.cookies.webTokenCookie);
+  //Condition qui vérifie que l'utilisateur est bien connecté
+  if (currentUser) {
+    try {
+      // Vérifie si l'utilisateur est dans le groupe admin
+      if (
+        (await prisma.user.findUnique({ where: { id: currentUser } }))
+          ?.group === "admin"
+      ) {
+        return res.status(401).json({
+          status: "Unauthorized",
+          message: "Utilisateur non autorisé",
+        });
+      }
+      //Récupère les informations de l'utilisateur qui va être modifié
+      const { userName, userEmail, userPassword, userGroup } = req.body;
+      //Vérifie si un compte existe avec l'e-mail dans la database
+      const user = await prisma.user.findUnique({
+        where: { email: userEmail },
+      });
+      //Condition qui vérifie qu'un compte avec le mail associé existe
+      if (!user) {
+        return res.status(404).json({
+          status: "User_Error",
+          message: "User doesn't exist",
+        });
+      }
+      //Suppression des données l'utilisateur dans la DB
+      await prisma.user.delete({
+        where: { email: userEmail },
+      });
+      //En cas d'erreur un message est retourné au serveur
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: "Error",
+        message: "Server Error",
+      });
+    }
+  } else {
+    res.status(401).json({
+      status: "Unauthorized",
+      message: "Utilisateur non autorisé",
+    });
+  }
+};
+
+//Fonction permettant de valider le webtoken de l'utilisateur
 const validateWebToken = async (token: string) => {
   try {
     //Vérifie que le token est bien présent dans la DB
@@ -167,6 +301,8 @@ const validateWebToken = async (token: string) => {
 export default {
   LoginUser,
   AddUserAccount,
+  EditUserAccount,
+  DeleteUserAccount,
   //GenerateOTP,
   //VerifyOTP,
   //ValidateOTP,

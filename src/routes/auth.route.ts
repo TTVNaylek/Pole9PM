@@ -29,5 +29,7 @@ router.post("/auth/login", authController.LoginUser);
 //router.post("/p9pm_ad/dashboard", authController.);
 //router.post("/p9pm_ad/history", authController.);
 router.post("/auth/add_account", authController.AddUserAccount);
+router.patch("/auth/edit_account", authController.EditUserAccount);
+router.delete("/auth/delete_account", authController.DeleteUserAccount);
 
 export default router;
