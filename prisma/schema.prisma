@@ -31,10 +31,22 @@ model User {
 }
 
 model UserToken {
-  id     String @id @default(uuid())
-  token  String
-  userID String @unique
-  user   User   @relation(fields: [userID], references: [id], onDelete: Cascade)
+  id         String  @id @default(uuid())
+  token      String
+  userID     String  @unique
+  user       User    @relation(fields: [userID], references: [id], onDelete: Cascade)
+  servicesId String?
 
   @@map(name: "UserToken")
+}
+
+model Services {
+  id          String @id @default(uuid())
+  serviceName String
+  email       String @unique
+  password    String
+  group       String
+  salt        String
+
+  @@map(name: "services")
 }

@@ -1,4 +1,8 @@
 "use strict";
+//Titre: auth.controller
+//Description : Module controller pour le gestionnaire de mots de passe pour l'association Pole9
+//Author: Kelyan D.
+//Version 0.5
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -68,6 +72,7 @@ const LoginUser = async (req, res) => {
             name: user.name,
             email: user.email,
             group: user.group,
+            otp_enabled: user.otp_enabled,
         };
         const webToken = jsonwebtoken_1.default.sign(userInfos, privatePem, {
             algorithm: "RS256",
@@ -274,8 +279,4 @@ exports.default = {
     AddUserAccount,
     EditUserAccount,
     DeleteUserAccount,
-    //GenerateOTP,
-    //VerifyOTP,
-    //ValidateOTP,
-    //DisableOTP,
 };

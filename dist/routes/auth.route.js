@@ -2,19 +2,20 @@
 //Titre: Auth Routes
 //Description : Module de routes pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
-//Version 0.2
+//Version 0.3
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const auth_controller_1 = __importDefault(require("../controllers/auth.controller"));
+const otpSystem_1 = __importDefault(require("../controllers/otpSystem"));
 const router = express_1.default.Router();
 //Routes pour les requêtes de l'API REST
 //Connexion
 router.post("/auth/login", auth_controller_1.default.LoginUser);
 //A2F
-//router.post("/otp/generate", authController.GenerateOTP);
+router.post("/otp/generate", otpSystem_1.default.GenerateOTP);
 //router.post("/otp/verify", authController.VerifyOTP);
 //router.post("/otp/validate", authController.ValidateOTP);
 //router.post("/otp/disable", authController.DisableOTP);

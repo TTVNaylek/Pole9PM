@@ -11,6 +11,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "hi-base32": "^0.5.1",
+    "otpauth": "^9.2.2",
+    "prettier": "^3.2.5",
     "prisma": "^5.9.1",
     "typescript": "^5.3.3"
   },

@@ -1,13 +1,15 @@
+//Titre: auth.controller
+//Description : Module controller pour le gestionnaire de mots de passe pour l'association Pole9
+//Author: Kelyan D.
+//Version 0.5
+
 import crypto from "crypto";
-import { Prisma } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../ServerModule";
 import jwt from "jsonwebtoken";
 import * as fs from "fs";
 //Import du fichier script pour la vérification des permissions
 import permVerification from "./permVerification";
-import { token } from "morgan";
-import { empty } from "@prisma/client/runtime/library";
 
 //Récupère les clés
 const privatePem = fs.readFileSync("./key.pem");
@@ -47,6 +49,7 @@ const LoginUser = async (req: Request, res: Response) => {
       name: user.name,
       email: user.email,
       group: user.group,
+      otp_enabled: user.otp_enabled,
     };
     const webToken = jwt.sign(userInfos, privatePem, {
       algorithm: "RS256",
@@ -264,8 +267,4 @@ export default {
   AddUserAccount,
   EditUserAccount,
   DeleteUserAccount,
-  //GenerateOTP,
-  //VerifyOTP,
-  //ValidateOTP,
-  //DisableOTP,
 };

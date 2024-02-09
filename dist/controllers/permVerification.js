@@ -57,7 +57,10 @@ async function checkCurrentUser(req, res) {
     const currentUser = await validateWebToken(req.cookies.webTokenCookie);
     //Vérifie si l'utilisateur est connecté
     if (!currentUser) {
-        return false;
+        return res.status(401).json({
+            status: "Unauthorized",
+            message: "Utilisateur non autorisé",
+        });
     }
 }
 async function checkPermissions(req, res) {
@@ -65,7 +68,10 @@ async function checkPermissions(req, res) {
     const currentUser = await validateWebToken(req.cookies.webTokenCookie);
     //Vérifie si l'utilisateur est connecté
     if (!currentUser) {
-        return false;
+        return res.status(401).json({
+            status: "Unauthorized",
+            message: "Utilisateur non autorisé",
+        });
     }
     //Vérifie si l'utilisateur existe
     const currentUserData = await ServerModule_1.prisma.user.findUnique({
@@ -90,4 +96,5 @@ async function checkPermissions(req, res) {
 exports.default = {
     validateWebToken,
     checkPermissions,
+    checkCurrentUser,
 };

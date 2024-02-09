@@ -1,5 +1,8 @@
-import { Prisma } from "@prisma/client";
-import { Request, Response, NextFunction } from "express";
+//Titre: permVerification
+//Description : Module controller pour le gestionnaire de mots de passe pour l'association Pole9
+//Author: Kelyan D.
+//Version 0.1
+import express, { Request, Response, NextFunction } from "express";
 import { prisma } from "../ServerModule";
 import jwt from "jsonwebtoken";
 import * as fs from "fs";
@@ -8,7 +11,7 @@ import * as fs from "fs";
 const privatePem = fs.readFileSync("./key.pem");
 const publicPem = fs.readFileSync("./public.pem");
 
-//Fonction permettant de valider le webtoken de l'utilisateur
+//Fonction pour valider le webtoken de l'utilisateur
 const validateWebToken = async (token: string) => {
   try {
     //Vérifie que le token est bien présent dans la DB
@@ -29,22 +32,30 @@ const validateWebToken = async (token: string) => {
   }
 };
 
+//Fonction pour vérifier si l'utilisateur est connecté
 async function checkCurrentUser(req: Request, res: Response) {
   //Récupère le token de l'utilisateur actuel
   const currentUser = await validateWebToken(req.cookies.webTokenCookie);
 
   //Vérifie si l'utilisateur est connecté
   if (!currentUser) {
-    return false;
+    return res.status(401).json({
+      status: "Unauthorized",
+      message: "Utilisateur non autorisé",
+    });
   }
 }
+//Fonction pour vérifier les permissions de l'utilisateur
 async function checkPermissions(req: Request, res: Response) {
   //Récupère le token de l'utilisateur actuel
   const currentUser = await validateWebToken(req.cookies.webTokenCookie);
 
   //Vérifie si l'utilisateur est connecté
   if (!currentUser) {
-    return false;
+    return res.status(401).json({
+      status: "Unauthorized",
+      message: "Utilisateur non autorisé",
+    });
   }
 
   //Vérifie si l'utilisateur existe
@@ -70,4 +81,5 @@ async function checkPermissions(req: Request, res: Response) {
 export default {
   validateWebToken,
   checkPermissions,
+  checkCurrentUser,
 };
