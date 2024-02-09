@@ -4,13 +4,17 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../ServerModule";
 import jwt from "jsonwebtoken";
 import * as fs from "fs";
+//Import du fichier script pour la vérification des permissions
+import permVerification from "./permVerification";
+import { token } from "morgan";
+import { empty } from "@prisma/client/runtime/library";
 
-//Récupère la clé privée
+//Récupère les clés
 const privatePem = fs.readFileSync("./key.pem");
 const publicPem = fs.readFileSync("./public.pem");
 
 //Fonction de connexion de l'utilisateur
-const LoginUser = async (req: Request, res: Response, next: NextFunction) => {
+const LoginUser = async (req: Request, res: Response) => {
   //Bloc try-catch pour capturer une erreur si une se produit
   try {
     //Récupère e-mail & mot de passe du formulaire de la page web
@@ -50,14 +54,12 @@ const LoginUser = async (req: Request, res: Response, next: NextFunction) => {
       subject: user.id,
     });
 
-    //Sauvegarde dans la DB le webToken
-    await prisma.userToken.create({
-      data: {
-        userID: user.id,
-        token: webToken,
-      },
+    //Met à jour le token de l'utilisateur ou crée le token de l'utilisateur dans la DB
+    await prisma.userToken.upsert({
+      where: { userID: user.id },
+      update: { token: webToken },
+      create: { userID: user.id, token: webToken },
     });
-
     //Si toutes les informations sont bonnes alors le token et les infos utilisateur sont envoyés en réponse
     res
       .status(200)
@@ -83,27 +85,10 @@ const LoginUser = async (req: Request, res: Response, next: NextFunction) => {
 
 //Fonction pour ajouter un nouvel utilisateur
 //FONCTION ADMIN
-const AddUserAccount = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  //Récupère le token de l'utilisateur actuel
-  const currentUser = await validateWebToken(req.cookies.webTokenCookie);
-  console.log(currentUser);
+const AddUserAccount = async (req: Request, res: Response) => {
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if (currentUser) {
+  if ((await permVerification.checkPermissions(req, res)) == "admin") {
     try {
-      // Vérifier si l'utilisateur est dans le groupe admin
-      const currentUserData = await prisma.user.findUnique({
-        where: { id: currentUser },
-      });
-      if (!currentUserData || currentUserData.group !== "admin") {
-        return res.status(401).json({
-          status: "Unauthorized",
-          message: "Utilisateur non autorisé",
-        });
-      }
       //Récupère les informations de l'utilisateur qui va être inscrit
       const { userName, userEmail, userPassword, userGroup } = req.body;
 
@@ -142,6 +127,11 @@ const AddUserAccount = async (
           group: userGroup,
         },
       });
+
+      res.status(200).json({
+        status: "Success",
+        message: "User succesfully added",
+      });
       //En cas d'erreur un message est retourné au serveur
     } catch (error) {
       console.error(error);
@@ -160,40 +150,23 @@ const AddUserAccount = async (
 
 //Fonction permettant de modifier le compte de l'utilisateur
 //FONCTION ADMIN
-const EditUserAccount = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  //Récupère le token de l'utilisateur actuel
-  const currentUser = await validateWebToken(req.cookies.webTokenCookie);
-
-  console.log("Valeur de currentUser:" + currentUser);
+const EditUserAccount = async (req: Request, res: Response) => {
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if (currentUser) {
+  if ((await permVerification.checkPermissions(req, res)) == "admin") {
     try {
-      // Vérifie si l'utilisateur est dans le groupe admin
-      if (
-        (await prisma.user.findUnique({ where: { id: currentUser } }))
-          ?.group === "admin"
-      ) {
-        return res.status(401).json({
-          status: "Unauthorized",
-          message: "Utilisateur non autorisé",
-        });
-      }
       //Récupère les informations de l'utilisateur qui va être modifié
       const {
-        userName,
+        newUserName,
         currentUserEmail,
         newUserEmail,
-        userPassword,
-        userGroup,
+        newUserPassword,
+        newUserGroup,
       } = req.body;
       //Vérifie si un compte existe avec l'e-mail dans la database
       const user = await prisma.user.findUnique({
         where: { email: currentUserEmail },
       });
+
       //Condition qui vérifie qu'un compte avec le mail associé existe
       if (!user) {
         return res.status(404).json({
@@ -203,23 +176,28 @@ const EditUserAccount = async (
       }
       //
       //Création du nouveau salt de l'utilisateur
-      const userSalt = crypto.randomBytes(32).toString();
+      const newUserSalt = crypto.randomBytes(32).toString();
       //Le mot de passe entré dans le formulaire est chiffré + salé
-      const userPasswHashed = crypto
+      const newUserPasswHashed = crypto
         .createHash("sha512")
-        .update(userPassword + userSalt)
+        .update(newUserPassword + newUserSalt)
         .digest("hex");
       //Modification des données l'utilisateur dans la DB
       await prisma.user.update({
         where: { email: currentUserEmail },
         data: {
-          name: userName,
+          name: newUserName,
           email: newUserEmail,
-          password: userPasswHashed,
-          group: userGroup,
-          salt: userSalt,
+          password: newUserPasswHashed,
+          group: newUserGroup,
+          salt: newUserSalt,
         },
       });
+      res.status(200).json({
+        status: "Success",
+        message: "User succesfully edited",
+      });
+
       //En cas d'erreur un message est retourné au serveur
     } catch (error) {
       console.error(error);
@@ -239,23 +217,11 @@ const EditUserAccount = async (
 //Fonction permettant de supprimer le compte de l'utilisateur
 //FONCTION ADMIN
 const DeleteUserAccount = async (req: Request, res: Response) => {
-  //Récupère le token de l'utilisateur actuel
-  const currentUser = await validateWebToken(req.cookies.webTokenCookie);
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if (currentUser) {
+  if ((await permVerification.checkPermissions(req, res)) == "admin") {
     try {
-      // Vérifie si l'utilisateur est dans le groupe admin
-      if (
-        (await prisma.user.findUnique({ where: { id: currentUser } }))
-          ?.group === "admin"
-      ) {
-        return res.status(401).json({
-          status: "Unauthorized",
-          message: "Utilisateur non autorisé",
-        });
-      }
-      //Récupère les informations de l'utilisateur qui va être modifié
-      const { userName, userEmail, userPassword, userGroup } = req.body;
+      //Récupère les informations de l'utilisateur qui va être supprimé
+      const { userName, userEmail } = req.body;
       //Vérifie si un compte existe avec l'e-mail dans la database
       const user = await prisma.user.findUnique({
         where: { email: userEmail },
@@ -271,6 +237,11 @@ const DeleteUserAccount = async (req: Request, res: Response) => {
       await prisma.user.delete({
         where: { email: userEmail },
       });
+
+      res.status(200).json({
+        status: "Success",
+        message: "User succesfully deleted",
+      });
       //En cas d'erreur un message est retourné au serveur
     } catch (error) {
       console.error(error);
@@ -284,27 +255,6 @@ const DeleteUserAccount = async (req: Request, res: Response) => {
       status: "Unauthorized",
       message: "Utilisateur non autorisé",
     });
-  }
-};
-
-//Fonction permettant de valider le webtoken de l'utilisateur
-const validateWebToken = async (token: string) => {
-  try {
-    //Vérifie que le token est bien présent dans la DB
-    const dbToken = await prisma.userToken.findFirst({
-      where: { token: token },
-    });
-    //S'il n'est pas présent on s'arrete ici
-    if (!dbToken) {
-      return null;
-    }
-    //Vérifie si le token n'est pas usurpé avec la public key
-    const jwtToken = jwt.verify(token, publicPem);
-
-    //Compare et retourne le token de la DB et celui de l'utilisateur
-    return dbToken.userID == jwtToken.sub ? jwtToken.sub : null;
-  } catch (error) {
-    return null;
   }
 };
 

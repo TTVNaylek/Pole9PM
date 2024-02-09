@@ -30,11 +30,13 @@ const crypto_1 = __importDefault(require("crypto"));
 const ServerModule_1 = require("../ServerModule");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const fs = __importStar(require("fs"));
-//Récupère la clé privée
+//Import du fichier script pour la vérification des permissions
+const permVerification_1 = __importDefault(require("./permVerification"));
+//Récupère les clés
 const privatePem = fs.readFileSync("./key.pem");
 const publicPem = fs.readFileSync("./public.pem");
 //Fonction de connexion de l'utilisateur
-const LoginUser = async (req, res, next) => {
+const LoginUser = async (req, res) => {
     //Bloc try-catch pour capturer une erreur si une se produit
     try {
         //Récupère e-mail & mot de passe du formulaire de la page web
@@ -72,12 +74,11 @@ const LoginUser = async (req, res, next) => {
             issuer: "p9pm",
             subject: user.id,
         });
-        //Sauvegarde dans la DB le webToken
-        await ServerModule_1.prisma.userToken.create({
-            data: {
-                userID: user.id,
-                token: webToken,
-            },
+        //Met à jour le token de l'utilisateur ou crée le token de l'utilisateur dans la DB
+        await ServerModule_1.prisma.userToken.upsert({
+            where: { userID: user.id },
+            update: { token: webToken },
+            create: { userID: user.id, token: webToken },
         });
         //Si toutes les informations sont bonnes alors le token et les infos utilisateur sont envoyés en réponse
         res
@@ -104,26 +105,12 @@ const LoginUser = async (req, res, next) => {
 };
 //Fonction pour ajouter un nouvel utilisateur
 //FONCTION ADMIN
-const AddUserAccount = async (req, res, next) => {
-    //Récupère le token de l'utilisateur actuel
-    const currentUser = await validateWebToken(req.cookies.webTokenCookie);
-    console.log(currentUser);
+const AddUserAccount = async (req, res) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if (currentUser) {
+    if ((await permVerification_1.default.checkPermissions(req, res)) == "admin") {
         try {
-            // Vérifier si l'utilisateur est dans le groupe admin
-            const currentUserData = await ServerModule_1.prisma.user.findUnique({
-                where: { id: currentUser },
-            });
-            if (!currentUserData || currentUserData.group !== "admin") {
-                return res.status(401).json({
-                    status: "Unauthorized",
-                    message: "Utilisateur non autorisé",
-                });
-            }
             //Récupère les informations de l'utilisateur qui va être inscrit
             const { userName, userEmail, userPassword, userGroup } = req.body;
-            console.log(userName + " " + userEmail + " " + userPassword + " " + userGroup);
             //Vérifie si l'email est défini et n'est pas vide
             if (!userEmail) {
                 return res.status(400).json({
@@ -157,6 +144,10 @@ const AddUserAccount = async (req, res, next) => {
                     group: userGroup,
                 },
             });
+            res.status(200).json({
+                status: "Success",
+                message: "User succesfully added",
+            });
             //En cas d'erreur un message est retourné au serveur
         }
         catch (error) {
@@ -176,23 +167,12 @@ const AddUserAccount = async (req, res, next) => {
 };
 //Fonction permettant de modifier le compte de l'utilisateur
 //FONCTION ADMIN
-const EditUserAccount = async (req, res, next) => {
-    var _a;
-    //Récupère le token de l'utilisateur actuel
-    const currentUser = await validateWebToken(req.cookies.webTokenCookie);
-    console.log("Valeur de currentUser:" + currentUser);
+const EditUserAccount = async (req, res) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if (currentUser) {
+    if ((await permVerification_1.default.checkPermissions(req, res)) == "admin") {
         try {
-            // Vérifie si l'utilisateur est dans le groupe admin
-            if (((_a = (await ServerModule_1.prisma.user.findUnique({ where: { id: currentUser } }))) === null || _a === void 0 ? void 0 : _a.group) === "admin") {
-                return res.status(401).json({
-                    status: "Unauthorized",
-                    message: "Utilisateur non autorisé",
-                });
-            }
             //Récupère les informations de l'utilisateur qui va être modifié
-            const { userName, currentUserEmail, newUserEmail, userPassword, userGroup, } = req.body;
+            const { newUserName, currentUserEmail, newUserEmail, newUserPassword, newUserGroup, } = req.body;
             //Vérifie si un compte existe avec l'e-mail dans la database
             const user = await ServerModule_1.prisma.user.findUnique({
                 where: { email: currentUserEmail },
@@ -206,22 +186,26 @@ const EditUserAccount = async (req, res, next) => {
             }
             //
             //Création du nouveau salt de l'utilisateur
-            const userSalt = crypto_1.default.randomBytes(32).toString();
+            const newUserSalt = crypto_1.default.randomBytes(32).toString();
             //Le mot de passe entré dans le formulaire est chiffré + salé
-            const userPasswHashed = crypto_1.default
+            const newUserPasswHashed = crypto_1.default
                 .createHash("sha512")
-                .update(userPassword + userSalt)
+                .update(newUserPassword + newUserSalt)
                 .digest("hex");
             //Modification des données l'utilisateur dans la DB
             await ServerModule_1.prisma.user.update({
                 where: { email: currentUserEmail },
                 data: {
-                    name: userName,
+                    name: newUserName,
                     email: newUserEmail,
-                    password: userPasswHashed,
-                    group: userGroup,
-                    salt: userSalt,
+                    password: newUserPasswHashed,
+                    group: newUserGroup,
+                    salt: newUserSalt,
                 },
+            });
+            res.status(200).json({
+                status: "Success",
+                message: "User succesfully edited",
             });
             //En cas d'erreur un message est retourné au serveur
         }
@@ -243,21 +227,11 @@ const EditUserAccount = async (req, res, next) => {
 //Fonction permettant de supprimer le compte de l'utilisateur
 //FONCTION ADMIN
 const DeleteUserAccount = async (req, res) => {
-    var _a;
-    //Récupère le token de l'utilisateur actuel
-    const currentUser = await validateWebToken(req.cookies.webTokenCookie);
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if (currentUser) {
+    if ((await permVerification_1.default.checkPermissions(req, res)) == "admin") {
         try {
-            // Vérifie si l'utilisateur est dans le groupe admin
-            if (((_a = (await ServerModule_1.prisma.user.findUnique({ where: { id: currentUser } }))) === null || _a === void 0 ? void 0 : _a.group) === "admin") {
-                return res.status(401).json({
-                    status: "Unauthorized",
-                    message: "Utilisateur non autorisé",
-                });
-            }
-            //Récupère les informations de l'utilisateur qui va être modifié
-            const { userName, userEmail, userPassword, userGroup } = req.body;
+            //Récupère les informations de l'utilisateur qui va être supprimé
+            const { userName, userEmail } = req.body;
             //Vérifie si un compte existe avec l'e-mail dans la database
             const user = await ServerModule_1.prisma.user.findUnique({
                 where: { email: userEmail },
@@ -272,6 +246,10 @@ const DeleteUserAccount = async (req, res) => {
             //Suppression des données l'utilisateur dans la DB
             await ServerModule_1.prisma.user.delete({
                 where: { email: userEmail },
+            });
+            res.status(200).json({
+                status: "Success",
+                message: "User succesfully deleted",
             });
             //En cas d'erreur un message est retourné au serveur
         }
@@ -288,26 +266,6 @@ const DeleteUserAccount = async (req, res) => {
             status: "Unauthorized",
             message: "Utilisateur non autorisé",
         });
-    }
-};
-//Fonction permettant de valider le webtoken de l'utilisateur
-const validateWebToken = async (token) => {
-    try {
-        //Vérifie que le token est bien présent dans la DB
-        const dbToken = await ServerModule_1.prisma.userToken.findFirst({
-            where: { token: token },
-        });
-        //S'il n'est pas présent on s'arrete ici
-        if (!dbToken) {
-            return null;
-        }
-        //Vérifie si le token n'est pas usurpé avec la public key
-        const jwtToken = jsonwebtoken_1.default.verify(token, publicPem);
-        //Compare et retourne le token de la DB et celui de l'utilisateur
-        return dbToken.userID == jwtToken.sub ? jwtToken.sub : null;
-    }
-    catch (error) {
-        return null;
     }
 };
 //Exporte les fonctions pour auth.route

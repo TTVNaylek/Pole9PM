@@ -36,10 +36,5 @@ model UserToken {
   userID String @unique
   user   User   @relation(fields: [userID], references: [id], onDelete: Cascade)
 
-  @@map(name: "userToken")
-}
-
-model Groups {
-  id   String @id @default(uuid())
-  name String
+  @@map(name: "UserToken")
 }

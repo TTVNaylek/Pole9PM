@@ -1,0 +1,73 @@
+import { Prisma } from "@prisma/client";
+import { Request, Response, NextFunction } from "express";
+import { prisma } from "../ServerModule";
+import jwt from "jsonwebtoken";
+import * as fs from "fs";
+
+//Récupère les clés privé et public
+const privatePem = fs.readFileSync("./key.pem");
+const publicPem = fs.readFileSync("./public.pem");
+
+//Fonction permettant de valider le webtoken de l'utilisateur
+const validateWebToken = async (token: string) => {
+  try {
+    //Vérifie que le token est bien présent dans la DB
+    const dbToken = await prisma.userToken.findFirst({
+      where: { token: token },
+    });
+    //S'il n'est pas présent on s'arrete ici
+    if (!dbToken) {
+      return null;
+    }
+    //Vérifie si le token n'est pas usurpé avec la public key
+    const jwtToken = jwt.verify(token, publicPem);
+
+    //Compare et retourne le token de la DB et celui de l'utilisateur
+    return dbToken.userID == jwtToken.sub ? jwtToken.sub : null;
+  } catch (error) {
+    return null;
+  }
+};
+
+async function checkCurrentUser(req: Request, res: Response) {
+  //Récupère le token de l'utilisateur actuel
+  const currentUser = await validateWebToken(req.cookies.webTokenCookie);
+
+  //Vérifie si l'utilisateur est connecté
+  if (!currentUser) {
+    return false;
+  }
+}
+async function checkPermissions(req: Request, res: Response) {
+  //Récupère le token de l'utilisateur actuel
+  const currentUser = await validateWebToken(req.cookies.webTokenCookie);
+
+  //Vérifie si l'utilisateur est connecté
+  if (!currentUser) {
+    return false;
+  }
+
+  //Vérifie si l'utilisateur existe
+  const currentUserData = await prisma.user.findUnique({
+    where: { id: currentUser },
+  });
+
+  //Vérifie si l'utilisateur fait partie du groupe admin, responsable ou pilotage
+  if (currentUserData && currentUserData.group === "admin") {
+    return "admin";
+  } else if (currentUserData && currentUserData.group === "resp") {
+    return "responsable";
+  } else if (currentUserData && currentUserData.group === "pilotage") {
+    return "piloatge";
+  }
+  //Sinon on retourne une erreur
+  return res.status(401).json({
+    status: "Unauthorized",
+    message: "Utilisateur non autorisé",
+  });
+}
+
+export default {
+  validateWebToken,
+  checkPermissions,
+};
