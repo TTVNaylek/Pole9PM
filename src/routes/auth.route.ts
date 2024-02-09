@@ -1,7 +1,7 @@
 //Titre: Auth Routes
 //Description : Module de routes pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
-//Version 0.1
+//Version 0.2
 
 import express from "express";
 import authController from "../controllers/auth.controller";
@@ -25,9 +25,9 @@ router.post("/auth/login", authController.LoginUser);
 //router.post("/p9pm/logout", authController.);
 
 //Admin
-//router.post("/p9pm_ad/apass_generator", authController.);
-//router.post("/p9pm_ad/dashboard", authController.);
-//router.post("/p9pm_ad/history", authController.);
+//router.post("/admin/pass_generator", authController.);
+//router.post("/admin/dashboard", authController.);
+//router.post("/admin/history", authController.);
 router.post("/auth/add_account", authController.AddUserAccount);
 router.patch("/auth/edit_account", authController.EditUserAccount);
 router.delete("/auth/delete_account", authController.DeleteUserAccount);

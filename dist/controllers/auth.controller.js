@@ -49,17 +49,17 @@ const LoginUser = async (req, res, next) => {
             });
         }
         //Le mot de passe entré dans le formulaire est chiffré
-        const formPasswHashed = crypto_1.default
-            .createHash("sha512")
-            .update(password + user.salt)
-            .digest("hex");
+        //const formPasswHashed = crypto
+        // .createHash("sha512")
+        //  .update(password + user.salt)
+        //  .digest("hex");
         //Si le MDP de l'utilisateur est incorrect une erreur est renvoyée
-        if (user.password !== formPasswHashed) {
-            return res.status(400).json({
-                status: "Passw_Error",
-                message: "Incorrect password",
-            });
-        }
+        //if (user.password !== formPasswHashed) {
+        //  return res.status(400).json({
+        //    status: "Passw_Error",
+        //    message: "Incorrect password",
+        //  });
+        //}
         //Création du token utilisateur
         let userInfos = {
             id: user.id,
@@ -73,7 +73,7 @@ const LoginUser = async (req, res, next) => {
             subject: user.id,
         });
         //Sauvegarde dans la DB le webToken
-        ServerModule_1.prisma.userToken.create({
+        await ServerModule_1.prisma.userToken.create({
             data: {
                 userID: user.id,
                 token: webToken,
@@ -105,14 +105,17 @@ const LoginUser = async (req, res, next) => {
 //Fonction pour ajouter un nouvel utilisateur
 //FONCTION ADMIN
 const AddUserAccount = async (req, res, next) => {
-    var _a;
     //Récupère le token de l'utilisateur actuel
     const currentUser = await validateWebToken(req.cookies.webTokenCookie);
+    console.log(currentUser);
     //Condition qui vérifie que l'utilisateur est bien connecté
     if (currentUser) {
         try {
             // Vérifier si l'utilisateur est dans le groupe admin
-            if (((_a = (await ServerModule_1.prisma.user.findUnique({ where: { id: currentUser } }))) === null || _a === void 0 ? void 0 : _a.group) === "admin") {
+            const currentUserData = await ServerModule_1.prisma.user.findUnique({
+                where: { id: currentUser },
+            });
+            if (!currentUserData || currentUserData.group !== "admin") {
                 return res.status(401).json({
                     status: "Unauthorized",
                     message: "Utilisateur non autorisé",
@@ -120,12 +123,18 @@ const AddUserAccount = async (req, res, next) => {
             }
             //Récupère les informations de l'utilisateur qui va être inscrit
             const { userName, userEmail, userPassword, userGroup } = req.body;
-            //Vérifie si un compte existe avec l'e-mail dans la database
-            const user = await ServerModule_1.prisma.user.findUnique({
-                where: { email: userEmail },
-            });
+            console.log(userName + " " + userEmail + " " + userPassword + " " + userGroup);
+            //Vérifie si l'email est défini et n'est pas vide
+            if (!userEmail) {
+                return res.status(400).json({
+                    status: "No_Email",
+                    message: "L'email de l'utilisateur est manquant ou vide",
+                });
+            }
             //Condition pour vérifier qu'un compte avec le mail associé n'existe pas
-            if (user) {
+            if (await ServerModule_1.prisma.user.findUnique({
+                where: { email: userEmail },
+            })) {
                 return res.status(404).json({
                     status: "User_Error",
                     message: "User already exist",
@@ -171,6 +180,7 @@ const EditUserAccount = async (req, res, next) => {
     var _a;
     //Récupère le token de l'utilisateur actuel
     const currentUser = await validateWebToken(req.cookies.webTokenCookie);
+    console.log("Valeur de currentUser:" + currentUser);
     //Condition qui vérifie que l'utilisateur est bien connecté
     if (currentUser) {
         try {
@@ -293,7 +303,7 @@ const validateWebToken = async (token) => {
         }
         //Vérifie si le token n'est pas usurpé avec la public key
         const jwtToken = jsonwebtoken_1.default.verify(token, publicPem);
-        //Compare et retrourne le token de la DB et celui de l'utilisateur
+        //Compare et retourne le token de la DB et celui de l'utilisateur
         return dbToken.userID == jwtToken.sub ? jwtToken.sub : null;
     }
     catch (error) {

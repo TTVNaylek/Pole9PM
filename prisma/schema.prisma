@@ -31,10 +31,10 @@ model User {
 }
 
 model UserToken {
-  Id     String @id @default(uuid())
+  id     String @id @default(uuid())
   token  String
   userID String @unique
-  User   User   @relation(fields: [userID], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userID], references: [id], onDelete: Cascade)
 
   @@map(name: "userToken")
 }
