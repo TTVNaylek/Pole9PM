@@ -33,9 +33,19 @@ const validateWebToken = async (token: string) => {
 };
 
 //Fonction pour vérifier si l'utilisateur est connecté
-async function checkCurrentUser(req: Request, res: Response) {
+async function checkCurrentUser(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   //Récupère le token de l'utilisateur actuel
   const currentUser = await validateWebToken(req.cookies.webTokenCookie);
+
+  //Ne bloque pas l'accès à la page ...
+  if (["/auth/login"].includes(req.path)) {
+    next();
+    return;
+  }
 
   //Vérifie si l'utilisateur est connecté
   if (!currentUser) {
@@ -44,6 +54,8 @@ async function checkCurrentUser(req: Request, res: Response) {
       message: "Utilisateur non autorisé",
     });
   }
+  res.locals.principal = currentUser;
+  next();
 }
 //Fonction pour vérifier les permissions de l'utilisateur
 async function checkPermissions(req: Request, res: Response) {
@@ -69,17 +81,14 @@ async function checkPermissions(req: Request, res: Response) {
   } else if (currentUserData && currentUserData.group === "resp") {
     return "responsable";
   } else if (currentUserData && currentUserData.group === "pilotage") {
-    return "piloatge";
+    return "pilotage";
   }
   //Sinon on retourne une erreur
-  return res.status(401).json({
-    status: "Unauthorized",
-    message: "Utilisateur non autorisé",
-  });
+  return null;
 }
 
 export default {
   validateWebToken,
-  checkPermissions,
   checkCurrentUser,
+  checkPermissions,
 };

@@ -1,13 +1,11 @@
 import crypto from "crypto";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { prisma } from "../ServerModule";
 import jwt from "jsonwebtoken";
 import * as fs from "fs";
 import * as OTPAuth from "otpauth";
 import { encode } from "hi-base32";
 
-//Import du fichier script pour la vérification des permissions
-import permVerification from "./permVerification";
 //Fonction qui génère une suite en base 32
 const generateRandomBase32 = () => {
   const buffer = crypto.randomBytes(15);
@@ -18,17 +16,8 @@ const generateRandomBase32 = () => {
 //Fonction permettant de génerer la clé OTP
 const GenerateOTP = async (req: Request, res: Response) => {
   try {
-    //Récupère le token de l'utilisateur actuel
-    const currentUser = await permVerification.validateWebToken(
-      req.cookies.webTokenCookie,
-    );
-    //Vérifie si l'utilisateur est connecté
-    if (!currentUser) {
-      return res.status(401).json({
-        status: "Unauthorized",
-        message: "Utilisateur non autorisé",
-      });
-    }
+    //Récupère l'utilisateur connecté
+    const currentUser = res.locals.principal;
     //Vérifie si l'utilisateur existe dans la DB
     const currentUserData = await prisma.user.findUnique({
       where: { id: currentUser },
@@ -83,17 +72,8 @@ const VerifyOTP = async (req: Request, res: Response) => {
   try {
     //Récupère le token otp de l'utilisateur
     const { otpToken } = req.body;
-    //Récupère le token de l'utilisateur actuel
-    const currentUser = await permVerification.validateWebToken(
-      req.cookies.webTokenCookie,
-    );
-    //Vérifie si l'utilisateur est connecté
-    if (!currentUser) {
-      return res.status(401).json({
-        status: "Unauthorized",
-        message: "Utilisateur non autorisé",
-      });
-    }
+    //Récupère l'utilisateur connecté
+    const currentUser = res.locals.principal;
     //Recherche l'utilisateur dans la DB pour vérifier s'il existe
     const user = await prisma.user.findUnique({ where: { id: currentUser } });
     //Condition qui vérifie si l'utilisateur existe
@@ -154,18 +134,8 @@ const ValidateOTP = async (req: Request, res: Response) => {
   try {
     //Récupère le token otp de l'utilisateur
     const { otpToken } = req.body;
-    //Récupère le token de l'utilisateur actuel
-    const currentUser = await permVerification.validateWebToken(
-      req.cookies.webTokenCookie,
-    );
-    //Vérifie si l'utilisateur est connecté
-    if (!currentUser) {
-      return res.status(401).json({
-        status: "Unauthorized",
-        message: "Utilisateur non autorisé",
-      });
-    }
-
+    //Récupère l'utilisateur connecté
+    const currentUser = res.locals.principal;
     //Recherche l'utilisateur dans la DB pour vérifier s'il existe
     const user = await prisma.user.findUnique({ where: { id: currentUser } });
     //Condition qui vérifie si l'utilisateur existe
@@ -183,7 +153,6 @@ const ValidateOTP = async (req: Request, res: Response) => {
       digits: 6,
       secret: user.otp_base32!,
     });
-
     //Valide le totp token
     let delta = totp.validate({ token: otpToken, window: 1 });
     if (delta === null) {
@@ -208,17 +177,8 @@ const ValidateOTP = async (req: Request, res: Response) => {
 
 const DisableOTP = async (req: Request, res: Response) => {
   try {
-    //Récupère le token de l'utilisateur actuel
-    const currentUser = await permVerification.validateWebToken(
-      req.cookies.webTokenCookie,
-    );
-    //Vérifie si l'utilisateur est connecté
-    if (!currentUser) {
-      return res.status(401).json({
-        status: "Unauthorized",
-        message: "Utilisateur non autorisé",
-      });
-    }
+    //Récupère l'utilisateur connecté
+    const currentUser = res.locals.principal;
 
     //Vérifie si l'utilisateur existe dans la DB
     const user = await prisma.user.findUnique({ where: { id: currentUser } });

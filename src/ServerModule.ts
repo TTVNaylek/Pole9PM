@@ -5,10 +5,17 @@
 
 //Import des dépendaces requises
 import { PrismaClient } from "@prisma/client";
-import express, { Application, NextFunction, Request, Response } from "express";
+import express, {
+  Application,
+  NextFunction,
+  request,
+  Request,
+  Response,
+} from "express";
 import http from "http";
 import authRouter from "./routes/auth.route";
 import cookie from "cookie-parser";
+import permVerification from "./controllers/permVerification";
 
 //Déclarations des constantes nécessaires au fonctionnement du serveur web
 const PORT = 80;
@@ -19,6 +26,7 @@ export const prisma = new PrismaClient();
 //Middleware express
 app.use(cookie());
 app.use(express.urlencoded({ extended: true }));
+app.use(permVerification.checkCurrentUser);
 //Route de l'API
 app.use("/api", authRouter);
 

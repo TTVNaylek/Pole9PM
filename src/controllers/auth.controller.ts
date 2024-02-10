@@ -94,7 +94,6 @@ const AddUserAccount = async (req: Request, res: Response) => {
     try {
       //Récupère les informations de l'utilisateur qui va être inscrit
       const { userName, userEmail, userPassword, userGroup } = req.body;
-
       //Vérifie si l'email est défini et n'est pas vide
       if (!userEmail) {
         return res.status(400).json({

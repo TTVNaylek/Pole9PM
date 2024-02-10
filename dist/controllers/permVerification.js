@@ -32,7 +32,7 @@ const fs = __importStar(require("fs"));
 //Récupère les clés privé et public
 const privatePem = fs.readFileSync("./key.pem");
 const publicPem = fs.readFileSync("./public.pem");
-//Fonction permettant de valider le webtoken de l'utilisateur
+//Fonction pour valider le webtoken de l'utilisateur
 const validateWebToken = async (token) => {
     try {
         //Vérifie que le token est bien présent dans la DB
@@ -52,6 +52,7 @@ const validateWebToken = async (token) => {
         return null;
     }
 };
+//Fonction pour vérifier si l'utilisateur est connecté
 async function checkCurrentUser(req, res) {
     //Récupère le token de l'utilisateur actuel
     const currentUser = await validateWebToken(req.cookies.webTokenCookie);
@@ -63,6 +64,7 @@ async function checkCurrentUser(req, res) {
         });
     }
 }
+//Fonction pour vérifier les permissions de l'utilisateur
 async function checkPermissions(req, res) {
     //Récupère le token de l'utilisateur actuel
     const currentUser = await validateWebToken(req.cookies.webTokenCookie);
