@@ -2,7 +2,7 @@
 //Description : Module controller pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
 //Version 0.1
-import express, { Request, Response, NextFunction } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { prisma } from "../ServerModule";
 import jwt from "jsonwebtoken";
 import * as fs from "fs";
@@ -42,7 +42,7 @@ async function checkCurrentUser(
   const currentUser = await validateWebToken(req.cookies.webTokenCookie);
 
   //Ne bloque pas l'accès à la page ...
-  if (["/auth/login"].includes(req.path)) {
+  if (["/api/auth/login"].includes(req.path)) {
     next();
     return;
   }
