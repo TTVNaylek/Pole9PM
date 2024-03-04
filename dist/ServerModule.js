@@ -9,27 +9,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.prisma = void 0;
 //Import des dépendaces requises
+// Import des dépendaces requises
 const client_1 = require("@prisma/client");
 const express_1 = __importDefault(require("express"));
-const http_1 = __importDefault(require("http"));
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const morgan_1 = __importDefault(require("morgan"));
 const permVerification_1 = __importDefault(require("./controllers/permVerification"));
-//Déclarations des constantes nécessaires au fonctionnement du serveur web
+// Déclarations des constantes nécessaires au fonctionnement du serveur web
 const PORT = 443;
-const HOST = "localhost";
+const HOST = "172.17.50.129";
 const app = (0, express_1.default)();
 exports.prisma = new client_1.PrismaClient();
-//Middleware express
+// Middleware express
+app.use((0, morgan_1.default)("combined"));
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.urlencoded({ extended: true }));
 app.use(permVerification_1.default.checkCurrentUser);
-//Route de l'API
+// Route de l'API
 app.use("/api", auth_route_1.default);
-//Morgan pour les logs
-app.use((0, morgan_1.default)("combined"));
-//Texte à la racine de l'API / simple description
+// Morgan pour les logs
+// Texte à la racine de l'API / simple description
 app.get("/", (req, res) => {
     res.status(200).json({
         author: "Naylek_",
@@ -38,17 +38,12 @@ app.get("/", (req, res) => {
         message: "Bienvenue sur le gestionnaire de mots de passe de Pole 9",
     });
 });
-//Envoie un message si une erreur est détectée
+// Envoie un message si une erreur est détectée
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send("Error on express server");
 });
-//Service http
-const httpServer = http_1.default.createServer((req, res) => {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("Functionnal test");
-});
-//Le serveur web écoute sur le host:port
+// Le serveur web écoute sur le host:port
 app.listen(PORT, HOST, () => {
-    console.log(`App is listenting on port ${HOST}:${PORT}/`);
+    console.log(`App is listening on ${HOST}:${PORT}`);
 });

@@ -4,30 +4,30 @@
 //Version 0.5
 
 //Import des dépendaces requises
+// Import des dépendaces requises
 import { PrismaClient } from "@prisma/client";
 import express, { Application, NextFunction, Request, Response } from "express";
-import http from "http";
 import authRouter from "./routes/auth.route";
 import cookie from "cookie-parser";
 import morgan from "morgan";
 import permVerification from "./controllers/permVerification";
 
-//Déclarations des constantes nécessaires au fonctionnement du serveur web
+// Déclarations des constantes nécessaires au fonctionnement du serveur web
 const PORT = 443;
-const HOST = "localhost";
+const HOST = "172.17.50.129";
 const app: Application = express();
 export const prisma = new PrismaClient();
 
-//Middleware express
+// Morgan pour les logs
+app.use(morgan("combined"));
 app.use(cookie());
+// Middleware express
 app.use(express.urlencoded({ extended: true }));
 app.use(permVerification.checkCurrentUser);
-//Route de l'API
+// Route de l'API
 app.use("/api", authRouter);
-//Morgan pour les logs
-app.use(morgan("combined"));
 
-//Texte à la racine de l'API / simple description
+// Texte à la racine de l'API / simple description
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
     author: "Naylek_",
@@ -37,19 +37,13 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-//Envoie un message si une erreur est détectée
+// Envoie un message si une erreur est détectée
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
   res.status(500).send("Error on express server");
 });
 
-//Service http
-const httpServer = http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("Functionnal test");
-});
-
-//Le serveur web écoute sur le host:port
+// Le serveur web écoute sur le host:port
 app.listen(PORT, HOST, () => {
-  console.log(`App is listenting on port ${HOST}:${PORT}/`);
+  console.log(`App is listening on ${HOST}:${PORT}`);
 });

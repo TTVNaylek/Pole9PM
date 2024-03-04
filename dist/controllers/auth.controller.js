@@ -55,17 +55,17 @@ const LoginUser = async (req, res) => {
             });
         }
         //Le mot de passe entré dans le formulaire est chiffré
-        //const formPasswHashed = crypto
-        // .createHash("sha512")
-        //  .update(password + user.salt)
-        //  .digest("hex");
+        const formPasswHashed = crypto_1.default
+            .createHash("sha512")
+            .update(password + user.salt)
+            .digest("hex");
         //Si le MDP de l'utilisateur est incorrect une erreur est renvoyée
-        //if (user.password !== formPasswHashed) {
-        //  return res.status(400).json({
-        //    status: "Passw_Error",
-        //    message: "Incorrect password",
-        //  });
-        //}
+        if (user.password !== formPasswHashed) {
+            return res.status(400).json({
+                status: "Passw_Error",
+                message: "Incorrect password",
+            });
+        }
         //Création du token utilisateur
         let userInfos = {
             id: user.id,
@@ -90,7 +90,7 @@ const LoginUser = async (req, res) => {
             .status(200)
             .cookie("webTokenCookie", webToken, {
             httpOnly: true,
-            secure: true,
+            //secure: true,
             sameSite: true,
         })
             .json({
@@ -110,9 +110,9 @@ const LoginUser = async (req, res) => {
 };
 //Fonction pour ajouter un nouvel utilisateur
 //FONCTION ADMIN
-const AddUserAccount = async (req, res) => {
+const AddUserAccount = async (req, res, next) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await permVerification_1.default.checkPermissions(req, res)) == "admin") {
+    if ((await permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
         try {
             //Récupère les informations de l'utilisateur qui va être inscrit
             const { userName, userEmail, userPassword, userGroup } = req.body;
@@ -172,9 +172,9 @@ const AddUserAccount = async (req, res) => {
 };
 //Fonction permettant de modifier le compte de l'utilisateur
 //FONCTION ADMIN
-const EditUserAccount = async (req, res) => {
+const EditUserAccount = async (req, res, next) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await permVerification_1.default.checkPermissions(req, res)) == "admin") {
+    if ((await permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
         try {
             //Récupère les informations de l'utilisateur qui va être modifié
             const { newUserName, currentUserEmail, newUserEmail, newUserPassword, newUserGroup, } = req.body;
@@ -231,9 +231,9 @@ const EditUserAccount = async (req, res) => {
 };
 //Fonction permettant de supprimer le compte de l'utilisateur
 //FONCTION ADMIN
-const DeleteUserAccount = async (req, res) => {
+const DeleteUserAccount = async (req, res, next) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await permVerification_1.default.checkPermissions(req, res)) == "admin") {
+    if ((await permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
         try {
             //Récupère les informations de l'utilisateur qui va être supprimé
             const { userName, userEmail } = req.body;

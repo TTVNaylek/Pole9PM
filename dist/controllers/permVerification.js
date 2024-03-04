@@ -72,9 +72,9 @@ async function checkCurrentUser(req, res, next) {
     next();
 }
 //Fonction pour vérifier les permissions de l'utilisateur
-async function checkPermissions(req, res) {
+async function checkPermissions(req, res, next) {
     //Récupère le token de l'utilisateur actuel
-    const currentUser = await validateWebToken(req.cookies.webTokenCookie);
+    const currentUser = res.locals.principal;
     //Vérifie si l'utilisateur est connecté
     if (!currentUser) {
         return res.status(401).json({
