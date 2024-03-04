@@ -88,9 +88,13 @@ const LoginUser = async (req: Request, res: Response) => {
 
 //Fonction pour ajouter un nouvel utilisateur
 //FONCTION ADMIN
-const AddUserAccount = async (req: Request, res: Response) => {
+const AddUserAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if ((await permVerification.checkPermissions(req, res)) == "admin") {
+  if ((await permVerification.checkPermissions(req, res, next)) == "admin") {
     try {
       //Récupère les informations de l'utilisateur qui va être inscrit
       const { userName, userEmail, userPassword, userGroup } = req.body;
@@ -152,9 +156,13 @@ const AddUserAccount = async (req: Request, res: Response) => {
 
 //Fonction permettant de modifier le compte de l'utilisateur
 //FONCTION ADMIN
-const EditUserAccount = async (req: Request, res: Response) => {
+const EditUserAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if ((await permVerification.checkPermissions(req, res)) == "admin") {
+  if ((await permVerification.checkPermissions(req, res, next)) == "admin") {
     try {
       //Récupère les informations de l'utilisateur qui va être modifié
       const {
@@ -218,9 +226,13 @@ const EditUserAccount = async (req: Request, res: Response) => {
 
 //Fonction permettant de supprimer le compte de l'utilisateur
 //FONCTION ADMIN
-const DeleteUserAccount = async (req: Request, res: Response) => {
+const DeleteUserAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if ((await permVerification.checkPermissions(req, res)) == "admin") {
+  if ((await permVerification.checkPermissions(req, res, next)) == "admin") {
     try {
       //Récupère les informations de l'utilisateur qui va être supprimé
       const { userName, userEmail } = req.body;
