@@ -64,7 +64,7 @@ async function checkPermissions(
   next: NextFunction,
 ) {
   //Récupère le token de l'utilisateur actuel
-  const currentUser = await checkCurrentUser(req, res, next);
+  const currentUser = res.locals.principal;
 
   //Vérifie si l'utilisateur est connecté
   if (!currentUser) {
