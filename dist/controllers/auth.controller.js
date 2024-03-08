@@ -55,17 +55,17 @@ const LoginUser = async (req, res) => {
             });
         }
         //Le mot de passe entré dans le formulaire est chiffré
-        const formPasswHashed = crypto_1.default
-            .createHash("sha512")
-            .update(password + user.salt)
-            .digest("hex");
-        //Si le MDP de l'utilisateur est incorrect une erreur est renvoyée
-        if (user.password !== formPasswHashed) {
-            return res.status(400).json({
-                status: "Passw_Error",
-                message: "Incorrect password",
-            });
-        }
+        // const formPasswHashed = crypto
+        //   .createHash("sha512")
+        //   .update(password + user.salt)
+        //   .digest("hex");
+        // //Si le MDP de l'utilisateur est incorrect une erreur est renvoyée
+        // if (user.password !== formPasswHashed) {
+        //   return res.status(400).json({
+        //     status: "Passw_Error",
+        //     message: "Incorrect password",
+        //   });
+        // }
         //Création du token utilisateur
         let userInfos = {
             id: user.id,

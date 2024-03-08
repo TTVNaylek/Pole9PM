@@ -6,6 +6,7 @@
 import express from "express";
 import authController from "../controllers/auth.controller";
 import otpSystem from "../controllers/otpSystem";
+import permVerification from "../controllers/permVerification";
 
 const router = express.Router();
 

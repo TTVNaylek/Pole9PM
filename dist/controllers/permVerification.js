@@ -57,7 +57,7 @@ async function checkCurrentUser(req, res, next) {
     //Récupère le token de l'utilisateur actuel
     const currentUser = await validateWebToken(req.cookies.webTokenCookie);
     //Ne bloque pas l'accès à la page ...
-    if (["/api/auth/login"].includes(req.path)) {
+    if (["/api/auth/login", "/api/auth/verify"].includes(req.path)) {
         next();
         return;
     }
