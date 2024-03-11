@@ -10,7 +10,7 @@ import express, { Application, NextFunction, Request, Response } from "express";
 import authRouter from "./routes/auth.route";
 import cookie from "cookie-parser";
 import morgan from "morgan";
-import permVerification from "./controllers/permVerification";
+import permVerification from "./controllers/auth.permVerification";
 import cors from "cors";
 
 // Déclarations des constantes nécessaires au fonctionnement du serveur web

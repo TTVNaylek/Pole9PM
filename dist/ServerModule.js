@@ -15,7 +15,7 @@ const express_1 = __importDefault(require("express"));
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const morgan_1 = __importDefault(require("morgan"));
-const permVerification_1 = __importDefault(require("./controllers/permVerification"));
+const auth_permVerification_1 = __importDefault(require("./controllers/auth.permVerification"));
 const cors_1 = __importDefault(require("cors"));
 // Déclarations des constantes nécessaires au fonctionnement du serveur web
 const PORT = 443;
@@ -41,7 +41,7 @@ app.use((0, cors_1.default)({ origin: true, credentials: true }));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 //Middleware de permissions
-app.use(permVerification_1.default.checkCurrentUser);
+app.use(auth_permVerification_1.default.checkCurrentUser);
 //Route de l'API
 app.use("/api", auth_route_1.default);
 // Texte à la racine de l'API / simple description

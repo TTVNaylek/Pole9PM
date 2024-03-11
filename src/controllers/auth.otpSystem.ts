@@ -1,3 +1,7 @@
+//Titre: OTP System
+//Description : Module de l'OTP pour le gestionnaire de mots de passe pour l'association Pole9
+//Author: Kelyan D.
+//Version 0.1
 import crypto from "crypto";
 import { Request, Response } from "express";
 import { prisma } from "../ServerModule";

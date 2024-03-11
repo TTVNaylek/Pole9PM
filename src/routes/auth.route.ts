@@ -5,8 +5,8 @@
 
 import express from "express";
 import authController from "../controllers/auth.controller";
-import otpSystem from "../controllers/otpSystem";
-import permVerification from "../controllers/permVerification";
+import otpSystem from "../controllers/auth.otpSystem";
+import adminServices from "../controllers/admin.services";
 
 const router = express.Router();
 
@@ -24,14 +24,19 @@ router.post("/otp/disable", otpSystem.DisableOTP);
 //Autres
 //router.post("/p9pm/services_list", authController.);
 //router.post("/p9pm/settings", authController.);
-//router.post("/p9pm/logout", authController.);
 
 //Admin
 //router.post("/admin/pass_generator", authController.);
 //router.post("/admin/dashboard", authController.);
 //router.post("/admin/history", authController.);
+
+router.post("/p9pm_admin/add_service", adminServices.AddService);
+router.patch("/p9pm_admin/edit_service", adminServices.EditService);
+router.delete("/p9pm_admin/delete_service", adminServices.DeleteService);
+
 router.post("/auth/add_account", authController.AddUserAccount);
 router.patch("/auth/edit_account", authController.EditUserAccount);
 router.delete("/auth/delete_account", authController.DeleteUserAccount);
+router.delete("/auth/logout", authController.Logout);
 
 export default router;

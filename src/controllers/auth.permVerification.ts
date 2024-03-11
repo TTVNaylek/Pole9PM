@@ -1,14 +1,13 @@
 //Titre: permVerification
 //Description : Module controller pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
-//Version 0.1
+//Version 0.2
 import express, { NextFunction, Request, Response } from "express";
 import { prisma } from "../ServerModule";
 import jwt from "jsonwebtoken";
 import * as fs from "fs";
 
-//Récupère les clés privé et public
-const privatePem = fs.readFileSync("./key.pem");
+//Récupère la clé publique
 const publicPem = fs.readFileSync("./public.pem");
 
 //Fonction pour valider le webtoken de l'utilisateur
@@ -80,7 +79,7 @@ async function checkPermissions(
   //Vérifie si l'utilisateur fait partie du groupe admin, responsable ou pilotage
   if (currentUserData && currentUserData.group === "admin") {
     return "admin";
-  } else if (currentUserData && currentUserData.group === "resp") {
+  } else if (currentUserData && currentUserData.group === "responsable") {
     return "responsable";
   } else if (currentUserData && currentUserData.group === "pilotage") {
     return "pilotage";

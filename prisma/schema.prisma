@@ -27,7 +27,7 @@ model User {
   otp_base32   String?
   otp_auth_url String?
 
-  @@map(name: "users")
+  @@map(name: "Users")
 }
 
 model UserToken {
@@ -44,8 +44,7 @@ model Services {
   serviceName String
   email       String @unique
   password    String
-  group       String
   salt        String
 
-  @@map(name: "services")
+  @@map(name: "Services")
 }

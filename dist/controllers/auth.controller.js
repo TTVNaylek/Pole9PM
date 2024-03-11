@@ -35,10 +35,10 @@ const ServerModule_1 = require("../ServerModule");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const fs = __importStar(require("fs"));
 //Import du fichier script pour la vérification des permissions
-const permVerification_1 = __importDefault(require("./permVerification"));
-//Récupère les clés
+const auth_permVerification_1 = __importDefault(require("./auth.permVerification"));
+const auth_permVerification_2 = __importDefault(require("./auth.permVerification"));
+//Récupère la clé privée
 const privatePem = fs.readFileSync("./key.pem");
-const publicPem = fs.readFileSync("./public.pem");
 //Fonction de connexion de l'utilisateur
 const LoginUser = async (req, res) => {
     //Bloc try-catch pour capturer une erreur si une se produit
@@ -112,7 +112,7 @@ const LoginUser = async (req, res) => {
 //FONCTION ADMIN
 const AddUserAccount = async (req, res, next) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
+    if ((await auth_permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
         try {
             //Récupère les informations de l'utilisateur qui va être inscrit
             const { userName, userEmail, userPassword, userGroup } = req.body;
@@ -120,7 +120,7 @@ const AddUserAccount = async (req, res, next) => {
             if (!userEmail) {
                 return res.status(400).json({
                     status: "No_Email",
-                    message: "L'email de l'utilisateur est manquant ou vide",
+                    message: "User email is missing or empty",
                 });
             }
             //Condition pour vérifier qu'un compte avec le mail associé n'existe pas
@@ -129,7 +129,7 @@ const AddUserAccount = async (req, res, next) => {
             })) {
                 return res.status(404).json({
                     status: "User_Error",
-                    message: "User already exist",
+                    message: "Utilisateur existant",
                 });
             }
             //Création du salt de l'utilisateur
@@ -174,7 +174,7 @@ const AddUserAccount = async (req, res, next) => {
 //FONCTION ADMIN
 const EditUserAccount = async (req, res, next) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
+    if ((await auth_permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
         try {
             //Récupère les informations de l'utilisateur qui va être modifié
             const { newUserName, currentUserEmail, newUserEmail, newUserPassword, newUserGroup, } = req.body;
@@ -233,7 +233,7 @@ const EditUserAccount = async (req, res, next) => {
 //FONCTION ADMIN
 const DeleteUserAccount = async (req, res, next) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
+    if ((await auth_permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
         try {
             //Récupère les informations de l'utilisateur qui va être supprimé
             const { userName, userEmail } = req.body;
@@ -273,10 +273,46 @@ const DeleteUserAccount = async (req, res, next) => {
         });
     }
 };
+//Fonction permettant de se déconnecter
+const Logout = async (req, res) => {
+    try {
+        //Récupère le cookie de session qui contient le token
+        const userToken = String(req.cookies.webTokenCookie);
+        //Vérification que le cookie est bien présent
+        if (!userToken) {
+            return res.status(401).json({
+                status: "User_Error",
+                message: "Unauthorized",
+            });
+        }
+        //Récupération des informations utilisateurs dans le token
+        const currentUser = await auth_permVerification_2.default.validateWebToken(userToken);
+        //Vérification si l'utilisateur existe
+        if (!currentUser) {
+            return res.status(401).json({
+                status: "User_Error",
+                message: "User not found or disconnected",
+            });
+        }
+        //Supprime la ligne de la table UserToken correspondant à l'utilisateur
+        await ServerModule_1.prisma.userToken.deleteMany({ where: { userID: currentUser } });
+        //Effacer le cookie du client
+        res.clearCookie("webTokenCookie");
+        return res.status(200).json({
+            status: "Success",
+            message: "User successfully disconnected",
+        });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
 //Exporte les fonctions pour auth.route
 exports.default = {
     LoginUser,
     AddUserAccount,
     EditUserAccount,
     DeleteUserAccount,
+    Logout,
 };

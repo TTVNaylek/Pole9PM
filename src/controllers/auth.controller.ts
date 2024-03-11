@@ -9,11 +9,11 @@ import { prisma } from "../ServerModule";
 import jwt from "jsonwebtoken";
 import * as fs from "fs";
 //Import du fichier script pour la vérification des permissions
-import permVerification from "./permVerification";
+import permVerification from "./auth.permVerification";
+import authPermVerification from "./auth.permVerification";
 
-//Récupère les clés
+//Récupère la clé privée
 const privatePem = fs.readFileSync("./key.pem");
-const publicPem = fs.readFileSync("./public.pem");
 
 //Fonction de connexion de l'utilisateur
 const LoginUser = async (req: Request, res: Response) => {
@@ -102,7 +102,7 @@ const AddUserAccount = async (
       if (!userEmail) {
         return res.status(400).json({
           status: "No_Email",
-          message: "L'email de l'utilisateur est manquant ou vide",
+          message: "User email is missing or empty",
         });
       }
       //Condition pour vérifier qu'un compte avec le mail associé n'existe pas
@@ -113,7 +113,7 @@ const AddUserAccount = async (
       ) {
         return res.status(404).json({
           status: "User_Error",
-          message: "User already exist",
+          message: "Utilisateur existant",
         });
       }
       //Création du salt de l'utilisateur
@@ -272,10 +272,51 @@ const DeleteUserAccount = async (
   }
 };
 
+//Fonction permettant de se déconnecter
+const Logout = async (req: Request, res: Response) => {
+  try {
+    //Récupère le cookie de session qui contient le token
+    const userToken = String(req.cookies.webTokenCookie);
+
+    //Vérification que le cookie est bien présent
+    if (!userToken) {
+      return res.status(401).json({
+        status: "User_Error",
+        message: "Unauthorized",
+      });
+    }
+    //Récupération des informations utilisateurs dans le token
+    const currentUser = await authPermVerification.validateWebToken(userToken);
+
+    //Vérification si l'utilisateur existe
+    if (!currentUser) {
+      return res.status(401).json({
+        status: "User_Error",
+        message: "User not found or disconnected",
+      });
+    }
+
+    //Supprime la ligne de la table UserToken correspondant à l'utilisateur
+    await prisma.userToken.deleteMany({ where: { userID: currentUser } });
+
+    //Effacer le cookie du client
+    res.clearCookie("webTokenCookie");
+
+    return res.status(200).json({
+      status: "Success",
+      message: "User successfully disconnected",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 //Exporte les fonctions pour auth.route
 export default {
   LoginUser,
   AddUserAccount,
   EditUserAccount,
   DeleteUserAccount,
+  Logout,
 };
