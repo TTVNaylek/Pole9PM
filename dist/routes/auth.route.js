@@ -9,8 +9,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const auth_controller_1 = __importDefault(require("../controllers/auth.controller"));
-const auth_otpSystem_1 = __importDefault(require("../controllers/auth.otpSystem"));
 const admin_services_1 = __importDefault(require("../controllers/admin.services"));
+const auth_otpSystem_1 = __importDefault(require("../controllers/auth.otpSystem"));
 const router = express_1.default.Router();
 //Routes pour les requêtes de l'API REST
 //Connexion

@@ -4,16 +4,16 @@
 //Version 0.1
 
 import crypto from "crypto";
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { prisma } from "../ServerModule";
 //Import du fichier script pour la vérification des permissions
 import permVerification from "./auth.permVerification";
 
 //Fonction pour ajouter un nouveau service
 //FONCTION ADMIN
-const AddService = async (req: Request, res: Response, next: NextFunction) => {
+const AddService = async (req: Request, res: Response) => {
   //Condition qui vérifie si l'utilisateur est du groupe admin
-  if ((await permVerification.checkPermissions(req, res, next)) == "admin") {
+  if ((await permVerification.checkPermissions(res)) == "admin") {
     try {
       //Récupère les informations du service
       const { serviceName, serviceEmail, servicePassword } = req.body;
@@ -73,9 +73,9 @@ const AddService = async (req: Request, res: Response, next: NextFunction) => {
 
 //Fonction permettant de modifier le service
 //FONCTION ADMIN
-const EditService = async (req: Request, res: Response, next: NextFunction) => {
+const EditService = async (req: Request, res: Response) => {
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if ((await permVerification.checkPermissions(req, res, next)) == "admin") {
+  if ((await permVerification.checkPermissions(res)) == "admin") {
     try {
       //Récupère les informations de l'utilisateur qui va être modifié
       const {
@@ -136,16 +136,12 @@ const EditService = async (req: Request, res: Response, next: NextFunction) => {
 
 //Fonction permettant de supprimer le service
 //FONCTION ADMIN
-const DeleteService = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+const DeleteService = async (req: Request, res: Response) => {
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if ((await permVerification.checkPermissions(req, res, next)) == "admin") {
+  if ((await permVerification.checkPermissions(res)) == "admin") {
     try {
       //Récupère les informations de l'utilisateur qui va être supprimé
-      const { serviceName, serviceEmail } = req.body;
+      const { serviceEmail } = req.body;
       //Vérifie si un compte existe avec l'e-mail dans la database
       const service = await prisma.services.findUnique({
         where: { email: serviceEmail },

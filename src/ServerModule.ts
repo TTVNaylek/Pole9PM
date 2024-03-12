@@ -6,12 +6,19 @@
 //Import des dépendaces requises
 // Import des dépendaces requises
 import { PrismaClient } from "@prisma/client";
-import express, { Application, NextFunction, Request, Response } from "express";
+import express, { Application, Request, Response } from "express";
 import authRouter from "./routes/auth.route";
 import cookie from "cookie-parser";
 import morgan from "morgan";
 import permVerification from "./controllers/auth.permVerification";
 import cors from "cors";
+import { createWriteStream } from "fs";
+import path from "path";
+
+// Chemin du fichier de logs
+const logFilePath = path.join(__dirname, "..", "logs", "server.log");
+// Création du flux d'écriture pour le fichier de logs
+const logStream = createWriteStream(logFilePath, { flags: "a" });
 
 // Déclarations des constantes nécessaires au fonctionnement du serveur web
 const PORT = 443;
@@ -19,17 +26,8 @@ const HOST = "172.17.50.129";
 const app: Application = express();
 export const prisma = new PrismaClient();
 
-//Liste d'origines autorisées SEULEMENT DEBUG
-const allowedOrigins = [
-  "172.17.50.133", // L'adresse IP d'où vous pensez que la requête devrait venir
-  "http://localhost:5173/", // L'adresse locale avec le port que vous utilisez
-  "http://127.0.0.1:5173/", // L'adresse de bouclage (loopback) avec le port
-];
-const options: cors.CorsOptions = {
-  origin: allowedOrigins,
-};
-
-//Affiche les requêtes HTTP
+//Utilisation de Morgan avec le flux d'écriture
+app.use(morgan("combined", { stream: logStream }));
 app.use(morgan("combined"));
 //Cookies de session
 app.use(cookie());
@@ -44,7 +42,7 @@ app.use(permVerification.checkCurrentUser);
 app.use("/api", authRouter);
 
 // Texte à la racine de l'API / simple description
-app.get("/", (req: Request, res: Response) => {
+app.get("/", (res: Response) => {
   res.status(200).json({
     author: "Naylek_",
     version: "0.4",
@@ -54,7 +52,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // Envoie un message si une erreur est détectée
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response) => {
   console.error(err.stack);
   res.status(500).send("Error on express server");
 });

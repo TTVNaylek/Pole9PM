@@ -5,20 +5,17 @@
 import crypto from "crypto";
 import { Request, Response } from "express";
 import { prisma } from "../ServerModule";
-import jwt from "jsonwebtoken";
-import * as fs from "fs";
 import * as OTPAuth from "otpauth";
 import { encode } from "hi-base32";
 
 //Fonction qui génère une suite en base 32
 const generateRandomBase32 = () => {
   const buffer = crypto.randomBytes(15);
-  const base32 = encode(buffer).replace(/=/g, "").substring(0, 24);
-  return base32;
+  return encode(buffer).replace(/=/g, "").substring(0, 24);
 };
 
 //Fonction permettant de génerer la clé OTP
-const GenerateOTP = async (req: Request, res: Response) => {
+const GenerateOTP = async (res: Response) => {
   try {
     //Récupère l'utilisateur connecté
     const currentUser = res.locals.principal;
@@ -70,6 +67,22 @@ const GenerateOTP = async (req: Request, res: Response) => {
     });
   }
 };
+// Fonction pour récupérer l'utilisateur et vérifier s'il existe
+async function getUserAndCheckIfExists(res: Response) {
+  // Récupère l'utilisateur connecté
+  const currentUser = res.locals.principal;
+  // Recherche l'utilisateur dans la DB pour vérifier s'il existe
+  const user = await prisma.user.findUnique({ where: { id: currentUser } });
+  // Condition qui vérifie si l'utilisateur existe
+  if (!user) {
+    res.status(401).json({
+      status: "Unauthorized",
+      message: "otpToken is invalid or user doesn't exist",
+    });
+    return null;
+  }
+  return user;
+}
 
 //Fonction permettant la vérification de la clé OTP
 const VerifyOTP = async (req: Request, res: Response) => {
@@ -79,7 +92,7 @@ const VerifyOTP = async (req: Request, res: Response) => {
     //Récupère l'utilisateur connecté
     const currentUser = res.locals.principal;
     //Recherche l'utilisateur dans la DB pour vérifier s'il existe
-    const user = await prisma.user.findUnique({ where: { id: currentUser } });
+    const user = await getUserAndCheckIfExists(res);
     //Condition qui vérifie si l'utilisateur existe
     if (!user) {
       return res.status(401).json({
@@ -138,10 +151,8 @@ const ValidateOTP = async (req: Request, res: Response) => {
   try {
     //Récupère le token otp de l'utilisateur
     const { otpToken } = req.body;
-    //Récupère l'utilisateur connecté
-    const currentUser = res.locals.principal;
     //Recherche l'utilisateur dans la DB pour vérifier s'il existe
-    const user = await prisma.user.findUnique({ where: { id: currentUser } });
+    const user = await getUserAndCheckIfExists(res);
     //Condition qui vérifie si l'utilisateur existe
     if (!user) {
       return res.status(401).json({
@@ -179,7 +190,7 @@ const ValidateOTP = async (req: Request, res: Response) => {
   }
 };
 
-const DisableOTP = async (req: Request, res: Response) => {
+const DisableOTP = async (res: Response) => {
   try {
     //Récupère l'utilisateur connecté
     const currentUser = res.locals.principal;

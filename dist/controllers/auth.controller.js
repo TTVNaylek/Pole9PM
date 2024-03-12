@@ -110,9 +110,9 @@ const LoginUser = async (req, res) => {
 };
 //Fonction pour ajouter un nouvel utilisateur
 //FONCTION ADMIN
-const AddUserAccount = async (req, res, next) => {
+const AddUserAccount = async (req, res) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await auth_permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
+    if ((await auth_permVerification_1.default.checkPermissions(res)) == "admin") {
         try {
             //Récupère les informations de l'utilisateur qui va être inscrit
             const { userName, userEmail, userPassword, userGroup } = req.body;
@@ -172,9 +172,9 @@ const AddUserAccount = async (req, res, next) => {
 };
 //Fonction permettant de modifier le compte de l'utilisateur
 //FONCTION ADMIN
-const EditUserAccount = async (req, res, next) => {
+const EditUserAccount = async (req, res) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await auth_permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
+    if ((await auth_permVerification_1.default.checkPermissions(res)) == "admin") {
         try {
             //Récupère les informations de l'utilisateur qui va être modifié
             const { newUserName, currentUserEmail, newUserEmail, newUserPassword, newUserGroup, } = req.body;
@@ -231,12 +231,12 @@ const EditUserAccount = async (req, res, next) => {
 };
 //Fonction permettant de supprimer le compte de l'utilisateur
 //FONCTION ADMIN
-const DeleteUserAccount = async (req, res, next) => {
+const DeleteUserAccount = async (req, res) => {
     //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await auth_permVerification_1.default.checkPermissions(req, res, next)) == "admin") {
+    if ((await auth_permVerification_1.default.checkPermissions(res)) == "admin") {
         try {
             //Récupère les informations de l'utilisateur qui va être supprimé
-            const { userName, userEmail } = req.body;
+            const { userEmail } = req.body;
             //Vérifie si un compte existe avec l'e-mail dans la database
             const user = await ServerModule_1.prisma.user.findUnique({
                 where: { email: userEmail },

@@ -17,21 +17,19 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const morgan_1 = __importDefault(require("morgan"));
 const auth_permVerification_1 = __importDefault(require("./controllers/auth.permVerification"));
 const cors_1 = __importDefault(require("cors"));
+const fs_1 = require("fs");
+const path_1 = __importDefault(require("path"));
+// Chemin du fichier de logs
+const logFilePath = path_1.default.join(__dirname, "..", "logs", "server.log");
+// Création du flux d'écriture pour le fichier de logs
+const logStream = (0, fs_1.createWriteStream)(logFilePath, { flags: "a" });
 // Déclarations des constantes nécessaires au fonctionnement du serveur web
 const PORT = 443;
 const HOST = "172.17.50.129";
 const app = (0, express_1.default)();
 exports.prisma = new client_1.PrismaClient();
-//Liste d'origines autorisées SEULEMENT DEBUG
-const allowedOrigins = [
-    "172.17.50.133", // L'adresse IP d'où vous pensez que la requête devrait venir
-    "http://localhost:5173/", // L'adresse locale avec le port que vous utilisez
-    "http://127.0.0.1:5173/", // L'adresse de bouclage (loopback) avec le port
-];
-const options = {
-    origin: allowedOrigins,
-};
-//Affiche les requêtes HTTP
+//Utilisation de Morgan avec le flux d'écriture
+app.use((0, morgan_1.default)("combined", { stream: logStream }));
 app.use((0, morgan_1.default)("combined"));
 //Cookies de session
 app.use((0, cookie_parser_1.default)());
@@ -45,7 +43,7 @@ app.use(auth_permVerification_1.default.checkCurrentUser);
 //Route de l'API
 app.use("/api", auth_route_1.default);
 // Texte à la racine de l'API / simple description
-app.get("/", (req, res) => {
+app.get("/", (res) => {
     res.status(200).json({
         author: "Naylek_",
         version: "0.4",
@@ -54,7 +52,7 @@ app.get("/", (req, res) => {
     });
 });
 // Envoie un message si une erreur est détectée
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
     console.error(err.stack);
     res.status(500).send("Error on express server");
 });

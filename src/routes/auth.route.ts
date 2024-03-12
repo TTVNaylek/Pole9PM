@@ -5,8 +5,8 @@
 
 import express from "express";
 import authController from "../controllers/auth.controller";
-import otpSystem from "../controllers/auth.otpSystem";
 import adminServices from "../controllers/admin.services";
+import authOtpSystem from "../controllers/auth.otpSystem";
 
 const router = express.Router();
 
@@ -16,10 +16,10 @@ const router = express.Router();
 router.post("/auth/login", authController.LoginUser);
 
 //A2F
-router.post("/otp/generate", otpSystem.GenerateOTP);
-router.post("/otp/verify", otpSystem.VerifyOTP);
-router.post("/otp/validate", otpSystem.ValidateOTP);
-router.post("/otp/disable", otpSystem.DisableOTP);
+router.post("/otp/generate", authOtpSystem.GenerateOTP);
+router.post("/otp/verify", authOtpSystem.VerifyOTP);
+router.post("/otp/validate", authOtpSystem.ValidateOTP);
+router.post("/otp/disable", authOtpSystem.DisableOTP);
 
 //Autres
 //router.post("/p9pm/services_list", authController.);

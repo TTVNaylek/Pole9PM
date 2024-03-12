@@ -2,7 +2,7 @@
 //Description : Module controller pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
 //Version 0.2
-import express, { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prisma } from "../ServerModule";
 import jwt from "jsonwebtoken";
 import * as fs from "fs";
@@ -55,11 +55,7 @@ async function checkCurrentUser(
   next();
 }
 //Fonction pour vérifier les permissions de l'utilisateur
-async function checkPermissions(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+async function checkPermissions(res: Response) {
   //Récupère le token de l'utilisateur actuel
   const currentUser = res.locals.principal;
 
