@@ -9,7 +9,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.prisma = void 0;
 //Import des dépendaces requises
-// Import des dépendaces requises
 const client_1 = require("@prisma/client");
 const express_1 = __importDefault(require("express"));
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
@@ -27,7 +26,6 @@ const logStream = (0, fs_1.createWriteStream)(logFilePath, { flags: "a" });
 const PORT = 443;
 const HOST = "172.17.50.129";
 const app = (0, express_1.default)();
-exports.prisma = new client_1.PrismaClient();
 //Utilisation de Morgan avec le flux d'écriture
 app.use((0, morgan_1.default)("combined", { stream: logStream }));
 app.use((0, morgan_1.default)("combined"));
@@ -60,3 +58,5 @@ app.use((err, req, res) => {
 app.listen(PORT, HOST, () => {
     console.log(`App is listening on ${HOST}:${PORT}`);
 });
+//Export de prisma pour l'utiliser dans les autres modules
+exports.prisma = new client_1.PrismaClient();

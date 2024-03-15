@@ -10,9 +10,10 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(uuid())
-  group    String
-  email    String @unique
+  id       String   @id @default(uuid())
+  group    Groupes? @relation(fields: [groupId], references: [id]) // Relation avec Groupes
+  groupId  String?
+  email    String   @unique
   name     String
   password String
 
@@ -32,8 +33,8 @@ model User {
 
 model UserToken {
   id     String @id @default(uuid())
-  token  String
   userID String @unique
+  token  String
   user   User   @relation(fields: [userID], references: [id], onDelete: Cascade)
 
   @@map(name: "UserToken")
@@ -42,9 +43,27 @@ model UserToken {
 model Services {
   id          String @id @default(uuid())
   serviceName String
-  email       String @unique
+  email       String
   password    String
   salt        String
 
   @@map(name: "Services")
+}
+
+model Groupes {
+  id            String  @id @default(uuid())
+  GroupName     String  @unique
+  A2F           Boolean
+  ViewLOS       Boolean
+  ViewIDs       Boolean
+  ViewPsswAge   Boolean
+  CopyPassw     Boolean
+  MngMembers    Boolean
+  MngGrp        Boolean
+  MngMembersGrp Boolean
+  MngServices   Boolean
+  HstrySrvUsed  Boolean
+  User          User[]
+
+  @@map(name: "Groupes")
 }

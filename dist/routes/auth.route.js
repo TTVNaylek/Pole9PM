@@ -2,7 +2,7 @@
 //Titre: Auth Routes
 //Description : Module de routes pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
-//Version 0.4
+//Version 0.5
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };

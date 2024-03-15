@@ -73,11 +73,11 @@ async function checkPermissions(res: Response) {
   });
 
   //Vérifie si l'utilisateur fait partie du groupe admin, responsable ou pilotage
-  if (currentUserData && currentUserData.group === "admin") {
+  if (currentUserData && currentUserData.groupId === "admin") {
     return "admin";
-  } else if (currentUserData && currentUserData.group === "responsable") {
+  } else if (currentUserData && currentUserData.groupId === "responsable") {
     return "responsable";
-  } else if (currentUserData && currentUserData.group === "pilotage") {
+  } else if (currentUserData && currentUserData.groupId === "pilotage") {
     return "pilotage";
   }
   //Sinon on retourne une erreur

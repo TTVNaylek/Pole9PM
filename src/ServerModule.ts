@@ -4,7 +4,6 @@
 //Version 0.5
 
 //Import des dépendaces requises
-// Import des dépendaces requises
 import { PrismaClient } from "@prisma/client";
 import express, { Application, Request, Response } from "express";
 import authRouter from "./routes/auth.route";
@@ -24,7 +23,6 @@ const logStream = createWriteStream(logFilePath, { flags: "a" });
 const PORT = 443;
 const HOST = "172.17.50.129";
 const app: Application = express();
-export const prisma = new PrismaClient();
 
 //Utilisation de Morgan avec le flux d'écriture
 app.use(morgan("combined", { stream: logStream }));
@@ -40,7 +38,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(permVerification.checkCurrentUser);
 //Route de l'API
 app.use("/api", authRouter);
-
 // Texte à la racine de l'API / simple description
 app.get("/", (res: Response) => {
   res.status(200).json({
@@ -50,14 +47,15 @@ app.get("/", (res: Response) => {
     message: "Bienvenue sur le gestionnaire de mots de passe de Pole 9",
   });
 });
-
 // Envoie un message si une erreur est détectée
 app.use((err: Error, req: Request, res: Response) => {
   console.error(err.stack);
   res.status(500).send("Error on express server");
 });
-
 // Le serveur web écoute sur le host:port
 app.listen(PORT, HOST, () => {
   console.log(`App is listening on ${HOST}:${PORT}`);
 });
+
+//Export de prisma pour l'utiliser dans les autres modules
+export const prisma = new PrismaClient();

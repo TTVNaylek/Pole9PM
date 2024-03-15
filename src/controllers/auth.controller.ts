@@ -4,14 +4,12 @@
 //Version 0.5
 
 import crypto from "crypto";
-import { Request, Response } from "express";
-import { prisma } from "../ServerModule";
 import jwt from "jsonwebtoken";
 import * as fs from "fs";
+import { Request, Response } from "express";
+import { prisma } from "../ServerModule";
 //Import du fichier script pour la vérification des permissions
-import permVerification from "./auth.permVerification";
 import authPermVerification from "./auth.permVerification";
-
 //Récupère la clé privée
 const privatePem = fs.readFileSync("./key.pem");
 
@@ -48,7 +46,7 @@ const LoginUser = async (req: Request, res: Response) => {
       id: user.id,
       name: user.name,
       email: user.email,
-      group: user.group,
+      group: user.groupId,
       otp_enabled: user.otp_enabled,
     };
     const webToken = jwt.sign(userInfos, privatePem, {
@@ -90,7 +88,7 @@ const LoginUser = async (req: Request, res: Response) => {
 //FONCTION ADMIN
 const AddUserAccount = async (req: Request, res: Response) => {
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if ((await permVerification.checkPermissions(res)) == "admin") {
+  if ((await authPermVerification.checkPermissions(res)) == "admin") {
     try {
       //Récupère les informations de l'utilisateur qui va être inscrit
       const { userName, userEmail, userPassword, userGroup } = req.body;
@@ -154,7 +152,7 @@ const AddUserAccount = async (req: Request, res: Response) => {
 //FONCTION ADMIN
 const EditUserAccount = async (req: Request, res: Response) => {
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if ((await permVerification.checkPermissions(res)) == "admin") {
+  if ((await authPermVerification.checkPermissions(res)) == "admin") {
     try {
       //Récupère les informations de l'utilisateur qui va être modifié
       const {
@@ -220,7 +218,7 @@ const EditUserAccount = async (req: Request, res: Response) => {
 //FONCTION ADMIN
 const DeleteUserAccount = async (req: Request, res: Response) => {
   //Condition qui vérifie que l'utilisateur est bien connecté
-  if ((await permVerification.checkPermissions(res)) == "admin") {
+  if ((await authPermVerification.checkPermissions(res)) == "admin") {
     try {
       //Récupère les informations de l'utilisateur qui va être supprimé
       const { userEmail } = req.body;

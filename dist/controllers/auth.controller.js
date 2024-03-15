@@ -31,12 +31,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const crypto_1 = __importDefault(require("crypto"));
-const ServerModule_1 = require("../ServerModule");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const fs = __importStar(require("fs"));
+const ServerModule_1 = require("../ServerModule");
 //Import du fichier script pour la vérification des permissions
 const auth_permVerification_1 = __importDefault(require("./auth.permVerification"));
-const auth_permVerification_2 = __importDefault(require("./auth.permVerification"));
 //Récupère la clé privée
 const privatePem = fs.readFileSync("./key.pem");
 //Fonction de connexion de l'utilisateur
@@ -71,7 +70,7 @@ const LoginUser = async (req, res) => {
             id: user.id,
             name: user.name,
             email: user.email,
-            group: user.group,
+            group: user.groupId,
             otp_enabled: user.otp_enabled,
         };
         const webToken = jsonwebtoken_1.default.sign(userInfos, privatePem, {
@@ -286,7 +285,7 @@ const Logout = async (req, res) => {
             });
         }
         //Récupération des informations utilisateurs dans le token
-        const currentUser = await auth_permVerification_2.default.validateWebToken(userToken);
+        const currentUser = await auth_permVerification_1.default.validateWebToken(userToken);
         //Vérification si l'utilisateur existe
         if (!currentUser) {
             return res.status(401).json({
