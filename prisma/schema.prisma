@@ -12,7 +12,7 @@ datasource db {
 model User {
   id       String   @id @default(uuid())
   group    Groupes? @relation(fields: [groupId], references: [id]) // Relation avec Groupes
-  groupId  String?
+  groupId  Int?
   email    String   @unique
   name     String
   password String
@@ -51,10 +51,11 @@ model Services {
 }
 
 model Groupes {
-  id            String  @id @default(uuid())
+  id            Int     @id @default(autoincrement())
   GroupName     String  @unique
+  serviceID     String?
   A2F           Boolean
-  ViewLOS       Boolean
+  ViewLOS       LOS     @default(RESTRICTED)
   ViewIDs       Boolean
   ViewPsswAge   Boolean
   CopyPassw     Boolean
@@ -66,4 +67,10 @@ model Groupes {
   User          User[]
 
   @@map(name: "Groupes")
+}
+
+enum LOS {
+  ALL
+  LIMITED
+  RESTRICTED
 }

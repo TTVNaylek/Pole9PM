@@ -54,38 +54,8 @@ async function checkCurrentUser(
   res.locals.principal = currentUser;
   next();
 }
-//Fonction pour vérifier les permissions de l'utilisateur
-async function checkPermissions(res: Response) {
-  //Récupère le token de l'utilisateur actuel
-  const currentUser = res.locals.principal;
-
-  //Vérifie si l'utilisateur est connecté
-  if (!currentUser) {
-    return res.status(401).json({
-      status: "Unauthorized",
-      message: "Utilisateur non autorisé",
-    });
-  }
-
-  //Vérifie si l'utilisateur existe
-  const currentUserData = await prisma.user.findUnique({
-    where: { id: currentUser },
-  });
-
-  //Vérifie si l'utilisateur fait partie du groupe admin, responsable ou pilotage
-  if (currentUserData && currentUserData.groupId === "admin") {
-    return "admin";
-  } else if (currentUserData && currentUserData.groupId === "responsable") {
-    return "responsable";
-  } else if (currentUserData && currentUserData.groupId === "pilotage") {
-    return "pilotage";
-  }
-  //Sinon on retourne une erreur
-  return null;
-}
 
 export default {
   validateWebToken,
   checkCurrentUser,
-  checkPermissions,
 };

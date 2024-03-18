@@ -110,9 +110,16 @@ const LoginUser = async (req, res) => {
 //Fonction pour ajouter un nouvel utilisateur
 //FONCTION ADMIN
 const AddUserAccount = async (req, res) => {
-    //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await auth_permVerification_1.default.checkPermissions(res)) == "admin") {
-        try {
+    // Récupère l'utilisateur dans la DB correspondant à l'id
+    const currentUser = await ServerModule_1.prisma.user.findFirst({
+        where: { id: res.locals.principal },
+    });
+    // Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
+    if (currentUser !== null && currentUser.groupId !== null) {
+        // Condition qui vérifie si le groupe de l'utilisateur à la permission
+        if (await ServerModule_1.prisma.groupes.findFirst({
+            where: { id: currentUser.groupId, MngGrp: true },
+        })) {
             //Récupère les informations de l'utilisateur qui va être inscrit
             const { userName, userEmail, userPassword, userGroup } = req.body;
             //Vérifie si l'email est défini et n'est pas vide
@@ -120,6 +127,12 @@ const AddUserAccount = async (req, res) => {
                 return res.status(400).json({
                     status: "No_Email",
                     message: "User email is missing or empty",
+                });
+            }
+            if (!userGroup) {
+                return res.status(400).json({
+                    status: "No_Group",
+                    message: "User group is missing or empty",
                 });
             }
             //Condition pour vérifier qu'un compte avec le mail associé n'existe pas
@@ -145,36 +158,43 @@ const AddUserAccount = async (req, res) => {
                     email: userEmail,
                     password: userPasswHashed,
                     salt: userSalt,
-                    group: userGroup,
+                    group: { connect: { id: userGroup } },
                 },
             });
-            res.status(200).json({
+            return res.status(200).json({
                 status: "Success",
                 message: "User succesfully added",
             });
-            //En cas d'erreur un message est retourné au serveur
         }
-        catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: "Error",
-                message: "Server Error",
+        else {
+            // Retourne une erreur si l'utilisateur n'a pas la permission
+            return res.status(401).json({
+                status: "Unauthorized",
+                message: "Utilisateur non autorisé",
             });
         }
     }
     else {
-        res.status(401).json({
-            status: "Unauthorized",
-            message: "Utilisateur non autorisé",
+        // Retourne une erreur si l'utilisateur n'est pas trouvé ou n'a pas de groupe attribué
+        return res.status(404).json({
+            status: "Access denied",
+            message: "Not permitted",
         });
     }
 };
 //Fonction permettant de modifier le compte de l'utilisateur
 //FONCTION ADMIN
 const EditUserAccount = async (req, res) => {
-    //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await auth_permVerification_1.default.checkPermissions(res)) == "admin") {
-        try {
+    // Récupère l'utilisateur dans la DB correspondant à l'id
+    const currentUser = await ServerModule_1.prisma.user.findFirst({
+        where: { id: res.locals.principal },
+    });
+    // Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
+    if (currentUser !== null && currentUser.groupId !== null) {
+        // Condition qui vérifie si le groupe de l'utilisateur à la permission
+        if (await ServerModule_1.prisma.groupes.findFirst({
+            where: { id: currentUser.groupId, MngGrp: true },
+        })) {
             //Récupère les informations de l'utilisateur qui va être modifié
             const { newUserName, currentUserEmail, newUserEmail, newUserPassword, newUserGroup, } = req.body;
             //Vérifie si un compte existe avec l'e-mail dans la database
@@ -207,33 +227,40 @@ const EditUserAccount = async (req, res) => {
                     salt: newUserSalt,
                 },
             });
-            res.status(200).json({
+            return res.status(200).json({
                 status: "Success",
                 message: "User succesfully edited",
             });
-            //En cas d'erreur un message est retourné au serveur
         }
-        catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: "Error",
-                message: "Server Error",
+        else {
+            // Retourne une erreur si l'utilisateur n'a pas la permission
+            return res.status(401).json({
+                status: "Unauthorized",
+                message: "Utilisateur non autorisé",
             });
         }
     }
     else {
-        res.status(401).json({
-            status: "Unauthorized",
-            message: "Utilisateur non autorisé",
+        // Retourne une erreur si l'utilisateur n'est pas trouvé ou n'a pas de groupe attribué
+        return res.status(404).json({
+            status: "Access denied",
+            message: "Not permitted",
         });
     }
 };
 //Fonction permettant de supprimer le compte de l'utilisateur
 //FONCTION ADMIN
 const DeleteUserAccount = async (req, res) => {
-    //Condition qui vérifie que l'utilisateur est bien connecté
-    if ((await auth_permVerification_1.default.checkPermissions(res)) == "admin") {
-        try {
+    // Récupère l'utilisateur dans la DB correspondant à l'id
+    const currentUser = await ServerModule_1.prisma.user.findFirst({
+        where: { id: res.locals.principal },
+    });
+    // Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
+    if (currentUser !== null && currentUser.groupId !== null) {
+        // Condition qui vérifie si le groupe de l'utilisateur à la permission
+        if (await ServerModule_1.prisma.groupes.findFirst({
+            where: { id: currentUser.groupId, MngGrp: true },
+        })) {
             //Récupère les informations de l'utilisateur qui va être supprimé
             const { userEmail } = req.body;
             //Vérifie si un compte existe avec l'e-mail dans la database
@@ -251,61 +278,55 @@ const DeleteUserAccount = async (req, res) => {
             await ServerModule_1.prisma.user.delete({
                 where: { email: userEmail },
             });
-            res.status(200).json({
+            return res.status(200).json({
                 status: "Success",
                 message: "User succesfully deleted",
             });
-            //En cas d'erreur un message est retourné au serveur
         }
-        catch (error) {
-            console.error(error);
-            res.status(500).json({
-                status: "Error",
-                message: "Server Error",
+        else {
+            // Retourne une erreur si l'utilisateur n'a pas la permission
+            return res.status(401).json({
+                status: "Unauthorized",
+                message: "Utilisateur non autorisé",
             });
         }
     }
     else {
-        res.status(401).json({
-            status: "Unauthorized",
-            message: "Utilisateur non autorisé",
+        // Retourne une erreur si l'utilisateur n'est pas trouvé ou n'a pas de groupe attribué
+        return res.status(404).json({
+            status: "Access denied",
+            message: "Not permitted",
         });
     }
 };
 //Fonction permettant de se déconnecter
 const Logout = async (req, res) => {
-    try {
-        //Récupère le cookie de session qui contient le token
-        const userToken = String(req.cookies.webTokenCookie);
-        //Vérification que le cookie est bien présent
-        if (!userToken) {
-            return res.status(401).json({
-                status: "User_Error",
-                message: "Unauthorized",
-            });
-        }
-        //Récupération des informations utilisateurs dans le token
-        const currentUser = await auth_permVerification_1.default.validateWebToken(userToken);
-        //Vérification si l'utilisateur existe
-        if (!currentUser) {
-            return res.status(401).json({
-                status: "User_Error",
-                message: "User not found or disconnected",
-            });
-        }
-        //Supprime la ligne de la table UserToken correspondant à l'utilisateur
-        await ServerModule_1.prisma.userToken.deleteMany({ where: { userID: currentUser } });
-        //Effacer le cookie du client
-        res.clearCookie("webTokenCookie");
-        return res.status(200).json({
-            status: "Success",
-            message: "User successfully disconnected",
+    //Récupère le cookie de session qui contient le token
+    const userToken = String(req.cookies.webTokenCookie);
+    //Vérification que le cookie est bien présent
+    if (!userToken) {
+        return res.status(401).json({
+            status: "User_Error",
+            message: "Unauthorized",
         });
     }
-    catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Internal Server Error" });
+    //Récupération des informations utilisateurs dans le token
+    const currentUser = await auth_permVerification_1.default.validateWebToken(userToken);
+    //Vérification si l'utilisateur existe
+    if (!currentUser) {
+        return res.status(401).json({
+            status: "User_Error",
+            message: "User not found or disconnected",
+        });
     }
+    //Supprime la ligne de la table UserToken correspondant à l'utilisateur
+    await ServerModule_1.prisma.userToken.deleteMany({ where: { userID: currentUser } });
+    //Effacer le cookie du client
+    res.clearCookie("webTokenCookie");
+    return res.status(200).json({
+        status: "Success",
+        message: "User successfully disconnected",
+    });
 };
 //Exporte les fonctions pour auth.route
 exports.default = {

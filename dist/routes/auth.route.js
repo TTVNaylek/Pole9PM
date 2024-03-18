@@ -11,10 +11,12 @@ const express_1 = __importDefault(require("express"));
 const auth_controller_1 = __importDefault(require("../controllers/auth.controller"));
 const admin_services_1 = __importDefault(require("../controllers/admin.services"));
 const auth_otpSystem_1 = __importDefault(require("../controllers/auth.otpSystem"));
+const admin_groupes_1 = __importDefault(require("../controllers/admin.groupes"));
 const router = express_1.default.Router();
 //Routes pour les requêtes de l'API REST
-//Connexion
+//Authentification
 router.post("/auth/login", auth_controller_1.default.LoginUser);
+router.delete("/auth/logout", auth_controller_1.default.Logout);
 //A2F
 router.post("/otp/generate", auth_otpSystem_1.default.GenerateOTP);
 router.post("/otp/verify", auth_otpSystem_1.default.VerifyOTP);
@@ -30,8 +32,12 @@ router.post("/otp/disable", auth_otpSystem_1.default.DisableOTP);
 router.post("/p9pm_admin/add_service", admin_services_1.default.AddService);
 router.patch("/p9pm_admin/edit_service", admin_services_1.default.EditService);
 router.delete("/p9pm_admin/delete_service", admin_services_1.default.DeleteService);
+//Gestion des comptes
 router.post("/auth/add_account", auth_controller_1.default.AddUserAccount);
 router.patch("/auth/edit_account", auth_controller_1.default.EditUserAccount);
 router.delete("/auth/delete_account", auth_controller_1.default.DeleteUserAccount);
-router.delete("/auth/logout", auth_controller_1.default.Logout);
+//Gestion des groupes
+router.post("/group/add_group", admin_groupes_1.default.AddGroup);
+router.patch("/group/edit_group", admin_groupes_1.default.EditGroup);
+router.delete("/group/delete_group", admin_groupes_1.default.DeleteGroup);
 exports.default = router;

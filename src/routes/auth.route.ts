@@ -8,6 +8,7 @@ import authController from "../controllers/auth.controller";
 import adminServices from "../controllers/admin.services";
 import authOtpSystem from "../controllers/auth.otpSystem";
 import adminGroupe from "../controllers/admin.groupes";
+import adminGroupes from "../controllers/admin.groupes";
 
 const router = express.Router();
 
@@ -42,7 +43,7 @@ router.patch("/auth/edit_account", authController.EditUserAccount);
 router.delete("/auth/delete_account", authController.DeleteUserAccount);
 
 //Gestion des groupes
-router.post("/group/add_group");
-router.patch("/group/edit_group");
-router.delete("/group/delete_group");
+router.post("/group/add_group", adminGroupes.AddGroup);
+router.patch("/group/edit_group", adminGroupes.EditGroup);
+router.delete("/group/delete_group", adminGroupes.DeleteGroup);
 export default router;

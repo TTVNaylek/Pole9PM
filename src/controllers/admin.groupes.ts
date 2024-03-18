@@ -7,7 +7,6 @@ const AddGroup = async (req: Request, res: Response) => {
   const currentUser = await prisma.user.findFirst({
     where: { id: res.locals.principal },
   });
-
   //Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
   if (currentUser !== null && currentUser.groupId !== null) {
     //Condition qui vérifie si le groupe de l'utilisateur à la permission
@@ -48,7 +47,6 @@ const AddGroup = async (req: Request, res: Response) => {
           message: "Group existing",
         });
       }
-
       //Création du groupe dans la DB
       await prisma.groupes.create({
         data: {
@@ -64,6 +62,10 @@ const AddGroup = async (req: Request, res: Response) => {
           HstrySrvUsed: hstrySrvUsed,
           MngGrp: mngGrp,
         },
+      });
+      return res.status(200).json({
+        status: "Success",
+        message: "Group succesfully added",
       });
     }
     //Sinon retourne une erreur
@@ -122,13 +124,13 @@ const EditGroup = async (req: Request, res: Response) => {
 
       // Condition pour vérifier qu'un groupe avec le nom associé n'existe pas
       if (
-        await prisma.groupes.findUnique({
+        !(await prisma.groupes.findUnique({
           where: { GroupName: grpName },
-        })
+        }))
       ) {
         return res.status(404).json({
           status: "Grp_Error",
-          message: "Group existing",
+          message: "Group didn't existing",
         });
       }
 
@@ -177,7 +179,7 @@ const DeleteGroup = async (req: Request, res: Response) => {
 
   // Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
   if (currentUser !== null && currentUser.groupId !== null) {
-    // Condition qui vérifie si le groupe de l'utilisateur a la permission
+    // Condition qui vérifie si le groupe de l'utilisateur à la permission
     if (
       await prisma.groupes.findFirst({
         where: { id: currentUser.groupId, MngGrp: true },
@@ -196,13 +198,13 @@ const DeleteGroup = async (req: Request, res: Response) => {
 
       // Condition pour vérifier qu'un groupe avec le nom associé n'existe pas
       if (
-        await prisma.groupes.findUnique({
+        !(await prisma.groupes.findUnique({
           where: { GroupName: grpName },
-        })
+        }))
       ) {
         return res.status(404).json({
           status: "Grp_Error",
-          message: "Group existing",
+          message: "Group didn't existing",
         });
       }
 
