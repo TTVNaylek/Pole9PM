@@ -5,14 +5,14 @@ import { prisma } from "../ServerModule";
 const AddGroup = async (req: Request, res: Response) => {
   //Récupère l'utilisateur dans la DB correspondant à l'id
   const currentUser = await prisma.user.findFirst({
-    where: { id: res.locals.principal },
+    where: { id_User: res.locals.principal },
   });
   //Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
   if (currentUser !== null && currentUser.groupId !== null) {
     //Condition qui vérifie si le groupe de l'utilisateur à la permission
     if (
       await prisma.groupes.findFirst({
-        where: { id: currentUser.groupId, MngGrp: true },
+        where: { id_Groupes: currentUser.groupId, MngGrp: true },
       })
     ) {
       //Récupère les informations du nouveau groupe
@@ -53,7 +53,7 @@ const AddGroup = async (req: Request, res: Response) => {
           GroupName: grpName,
           A2F: a2fPerm,
           ViewLOS: viewLoS,
-          ViewIDs: viewIdS,
+          ViewIDS: viewIdS,
           ViewPsswAge: viewPasswAge,
           CopyPassw: copyPassw,
           MngMembers: mngMembers,
@@ -87,7 +87,7 @@ const AddGroup = async (req: Request, res: Response) => {
 const EditGroup = async (req: Request, res: Response) => {
   // Récupère l'utilisateur dans la DB correspondant à l'id
   const currentUser = await prisma.user.findFirst({
-    where: { id: res.locals.principal },
+    where: { id_User: res.locals.principal },
   });
 
   // Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
@@ -95,7 +95,7 @@ const EditGroup = async (req: Request, res: Response) => {
     // Condition qui vérifie si le groupe de l'utilisateur à la permission
     if (
       await prisma.groupes.findFirst({
-        where: { id: currentUser.groupId, MngGrp: true },
+        where: { id_Groupes: currentUser.groupId, MngGrp: true },
       })
     ) {
       // Récupère les informations du nouveau groupe
@@ -141,7 +141,7 @@ const EditGroup = async (req: Request, res: Response) => {
           GroupName: newgrpName,
           A2F: a2fPerm,
           ViewLOS: viewLoS,
-          ViewIDs: viewIdS,
+          ViewIDS: viewIdS,
           ViewPsswAge: viewPasswAge,
           CopyPassw: copyPassw,
           MngMembers: mngMembers,
@@ -174,7 +174,7 @@ const EditGroup = async (req: Request, res: Response) => {
 const DeleteGroup = async (req: Request, res: Response) => {
   // Récupère l'utilisateur dans la DB correspondant à l'id
   const currentUser = await prisma.user.findFirst({
-    where: { id: res.locals.principal },
+    where: { id_User: res.locals.principal },
   });
 
   // Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
@@ -182,7 +182,7 @@ const DeleteGroup = async (req: Request, res: Response) => {
     // Condition qui vérifie si le groupe de l'utilisateur à la permission
     if (
       await prisma.groupes.findFirst({
-        where: { id: currentUser.groupId, MngGrp: true },
+        where: { id_Groupes: currentUser.groupId, MngGrp: true },
       })
     ) {
       // Récupère les informations du nouveau groupe

@@ -10,8 +10,8 @@ datasource db {
 }
 
 model User {
-  id       String   @id @default(uuid())
-  group    Groupes? @relation(fields: [groupId], references: [id]) // Relation avec Groupes
+  id_User  String   @id @default(uuid())
+  group    Groupes? @relation(fields: [groupId], references: [id_Groupes]) // Relation avec Groupes
   groupId  Int?
   email    String   @unique
   name     String
@@ -32,31 +32,31 @@ model User {
 }
 
 model UserToken {
-  id     String @id @default(uuid())
-  userID String @unique
-  token  String
-  user   User   @relation(fields: [userID], references: [id], onDelete: Cascade)
+  id_Token String @id @default(uuid())
+  userID   String @unique
+  token    String
+  user     User   @relation(fields: [userID], references: [id_User], onDelete: Cascade)
 
   @@map(name: "UserToken")
 }
 
 model Services {
-  id          String @id @default(uuid())
+  id_Services Int             @id @default(autoincrement())
   serviceName String
   email       String
   password    String
   salt        String
+  Groupe      GroupeService[]
 
   @@map(name: "Services")
 }
 
 model Groupes {
-  id            Int     @id @default(autoincrement())
-  GroupName     String  @unique
-  serviceID     String?
+  id_Groupes    Int             @id @default(autoincrement())
+  GroupName     String          @unique
   A2F           Boolean
-  ViewLOS       LOS     @default(RESTRICTED)
-  ViewIDs       Boolean
+  ViewLOS       Boolean
+  ViewIDS       Boolean
   ViewPsswAge   Boolean
   CopyPassw     Boolean
   MngMembers    Boolean
@@ -65,12 +65,16 @@ model Groupes {
   MngServices   Boolean
   HstrySrvUsed  Boolean
   User          User[]
+  Service       GroupeService[]
 
   @@map(name: "Groupes")
 }
 
-enum LOS {
-  ALL
-  LIMITED
-  RESTRICTED
+model GroupeService {
+  Groupe    Groupes  @relation(fields: [GroupeId], references: [id_Groupes])
+  GroupeId  Int
+  Service   Services @relation(fields: [ServiceID], references: [id_Services])
+  ServiceID Int
+
+  @@id([GroupeId, ServiceID])
 }

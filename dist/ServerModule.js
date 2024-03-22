@@ -1,5 +1,5 @@
 "use strict";
-//Titre: Server Module
+//Titre : Server Module
 //Description : Module serveur pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
 //Version 0.5
@@ -8,7 +8,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.prisma = void 0;
-//Import des dépendaces requises
+//Import des dépendances requises
 const client_1 = require("@prisma/client");
 const express_1 = __importDefault(require("express"));
 const auth_route_1 = __importDefault(require("./routes/auth.route"));

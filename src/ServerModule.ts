@@ -1,9 +1,9 @@
-//Titre: Server Module
+//Titre : Server Module
 //Description : Module serveur pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
 //Version 0.5
 
-//Import des dépendaces requises
+//Import des dépendances requises
 import { PrismaClient } from "@prisma/client";
 import express, { Application, Request, Response } from "express";
 import authRouter from "./routes/auth.route";

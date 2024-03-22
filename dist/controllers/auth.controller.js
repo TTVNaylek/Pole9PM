@@ -1,5 +1,5 @@
 "use strict";
-//Titre: auth.controller
+//Titre : auth.controller
 //Description : Module controller pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
 //Version 0.5
@@ -40,85 +40,81 @@ const auth_permVerification_1 = __importDefault(require("./auth.permVerification
 const privatePem = fs.readFileSync("./key.pem");
 //Fonction de connexion de l'utilisateur
 const LoginUser = async (req, res) => {
-    //Bloc try-catch pour capturer une erreur si une se produit
-    try {
-        //Récupère e-mail & mot de passe du formulaire de la page web
-        const { email, password } = req.body;
-        //Vérifie si un compte existe avec l'e-mail dans la database
-        const user = await ServerModule_1.prisma.user.findUnique({ where: { email: email } });
-        //Condition pour vérifier qu'un compte avec le mail associé existe
-        if (!user) {
-            return res.status(404).json({
-                status: "Email_Error",
-                message: "Incorrect e-mail",
-            });
-        }
-        //Le mot de passe entré dans le formulaire est chiffré
-        // const formPasswHashed = crypto
-        //   .createHash("sha512")
-        //   .update(password + user.salt)
-        //   .digest("hex");
-        // //Si le MDP de l'utilisateur est incorrect une erreur est renvoyée
-        // if (user.password !== formPasswHashed) {
-        //   return res.status(400).json({
-        //     status: "Passw_Error",
-        //     message: "Incorrect password",
-        //   });
-        // }
-        //Création du token utilisateur
-        let userInfos = {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            group: user.groupId,
-            otp_enabled: user.otp_enabled,
-        };
-        const webToken = jsonwebtoken_1.default.sign(userInfos, privatePem, {
-            algorithm: "RS256",
-            issuer: "p9pm",
-            subject: user.id,
-        });
-        //Met à jour le token de l'utilisateur ou crée le token de l'utilisateur dans la DB
-        await ServerModule_1.prisma.userToken.upsert({
-            where: { userID: user.id },
-            update: { token: webToken },
-            create: { userID: user.id, token: webToken },
-        });
-        //Si toutes les informations sont bonnes alors le token et les infos utilisateur sont envoyés en réponse
-        res
-            .status(200)
-            .cookie("webTokenCookie", webToken, {
-            httpOnly: true,
-            //secure: true,
-            sameSite: true,
-        })
-            .json({
-            status: "Success",
-            token: webToken,
-            user: userInfos,
-        });
-        //En cas d'erreur un message est retourné au serveur
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({
-            status: "Error",
-            message: "Server Error",
+    //Récupère e-mail & mot de passe du formulaire de la page web
+    const { email, password } = req.body;
+    //Vérifie si un compte existe avec l'e-mail dans la database
+    const user = await ServerModule_1.prisma.user.findUnique({ where: { email: email } });
+    //Condition pour vérifier qu'un compte avec le mail associé existe
+    if (!user) {
+        return res.status(404).json({
+            status: "Email_Error",
+            message: "Incorrect e-mail",
         });
     }
+    if (!password) {
+        return res.status(404).json({
+            status: "Passw_Error",
+            message: "Password Empty",
+        });
+    }
+    //Le mot de passe entré dans le formulaire est chiffré
+    // const formPasswHashed = crypto
+    //   .createHash("sha512")
+    //   .update(password + user.salt)
+    //   .digest("hex");
+    // //Si le MDP de l'utilisateur est incorrect une erreur est renvoyée
+    // if (user.password !== formPasswHashed) {
+    //   return res.status(400).json({
+    //     status: "Passw_Error",
+    //     message: "Incorrect password",
+    //   });
+    // }
+    //Création du token utilisateur
+    let userInfos = {
+        id: user.id_User,
+        name: user.name,
+        email: user.email,
+        group: user.groupId,
+        otp_enabled: user.otp_enabled,
+    };
+    //Signe le token avec une clé privée
+    const webToken = jsonwebtoken_1.default.sign(userInfos, privatePem, {
+        algorithm: "RS256",
+        issuer: "p9pm",
+        subject: user.id_User,
+    });
+    //Met à jour le token de l'utilisateur ou crée le token de l'utilisateur dans la DB
+    await ServerModule_1.prisma.userToken.upsert({
+        where: { userID: user.id_User },
+        update: { token: webToken },
+        create: { userID: user.id_User, token: webToken },
+    });
+    //Si toutes les informations sont bonnes alors le token et les infos utilisateur sont envoyés en réponse
+    res
+        .status(200)
+        .cookie("webTokenCookie", webToken, {
+        httpOnly: true,
+        //secure: true,
+        sameSite: true,
+    })
+        .json({
+        status: "Success",
+        token: webToken,
+        user: userInfos,
+    });
 };
 //Fonction pour ajouter un nouvel utilisateur
 //FONCTION ADMIN
 const AddUserAccount = async (req, res) => {
     // Récupère l'utilisateur dans la DB correspondant à l'id
     const currentUser = await ServerModule_1.prisma.user.findFirst({
-        where: { id: res.locals.principal },
+        where: { id_User: res.locals.principal },
     });
     // Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
     if (currentUser !== null && currentUser.groupId !== null) {
         // Condition qui vérifie si le groupe de l'utilisateur à la permission
         if (await ServerModule_1.prisma.groupes.findFirst({
-            where: { id: currentUser.groupId, MngGrp: true },
+            where: { id_Groupes: currentUser.groupId, MngMembers: true },
         })) {
             //Récupère les informations de l'utilisateur qui va être inscrit
             const { userName, userEmail, userPassword, userGroup } = req.body;
@@ -144,23 +140,29 @@ const AddUserAccount = async (req, res) => {
                     message: "Utilisateur existant",
                 });
             }
-            //Création du salt de l'utilisateur
-            const userSalt = crypto_1.default.randomBytes(32).toString();
-            //Le mot de passe entré dans le formulaire est chiffré + salé
-            const userPasswHashed = crypto_1.default
-                .createHash("sha512")
-                .update(userPassword + userSalt)
-                .digest("hex");
-            //Création l'utilisateur dans la DB
-            await ServerModule_1.prisma.user.create({
-                data: {
-                    name: userName,
-                    email: userEmail,
-                    password: userPasswHashed,
-                    salt: userSalt,
-                    group: { connect: { id: userGroup } },
-                },
-            });
+            try {
+                //Création du salt de l'utilisateur
+                const userSalt = crypto_1.default.randomBytes(32).toString("base64");
+                //Le mot de passe entré dans le formulaire est chiffré + salé
+                const userPasswHashed = crypto_1.default
+                    .createHash("sha512")
+                    .update(userPassword + userSalt)
+                    .digest("hex");
+                //Création l'utilisateur dans la DB
+                await ServerModule_1.prisma.user.create({
+                    data: {
+                        name: userName,
+                        email: userEmail,
+                        password: userPasswHashed,
+                        salt: userSalt,
+                        group: { connect: { id_Groupes: userGroup } },
+                    },
+                });
+            }
+            catch (error) {
+                console.error(error);
+                return res.status(500).json({ message: "Internal Server Error" });
+            }
             return res.status(200).json({
                 status: "Success",
                 message: "User succesfully added",
@@ -187,13 +189,13 @@ const AddUserAccount = async (req, res) => {
 const EditUserAccount = async (req, res) => {
     // Récupère l'utilisateur dans la DB correspondant à l'id
     const currentUser = await ServerModule_1.prisma.user.findFirst({
-        where: { id: res.locals.principal },
+        where: { id_User: res.locals.principal },
     });
     // Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
     if (currentUser !== null && currentUser.groupId !== null) {
         // Condition qui vérifie si le groupe de l'utilisateur à la permission
         if (await ServerModule_1.prisma.groupes.findFirst({
-            where: { id: currentUser.groupId, MngGrp: true },
+            where: { id_Groupes: currentUser.groupId, MngMembers: true },
         })) {
             //Récupère les informations de l'utilisateur qui va être modifié
             const { newUserName, currentUserEmail, newUserEmail, newUserPassword, newUserGroup, } = req.body;
@@ -210,7 +212,7 @@ const EditUserAccount = async (req, res) => {
             }
             //
             //Création du nouveau salt de l'utilisateur
-            const newUserSalt = crypto_1.default.randomBytes(32).toString();
+            const newUserSalt = crypto_1.default.randomBytes(32).toString("base64");
             //Le mot de passe entré dans le formulaire est chiffré + salé
             const newUserPasswHashed = crypto_1.default
                 .createHash("sha512")
@@ -253,13 +255,13 @@ const EditUserAccount = async (req, res) => {
 const DeleteUserAccount = async (req, res) => {
     // Récupère l'utilisateur dans la DB correspondant à l'id
     const currentUser = await ServerModule_1.prisma.user.findFirst({
-        where: { id: res.locals.principal },
+        where: { id_User: res.locals.principal },
     });
     // Condition qui vérifie si l'utilisateur et l'id du groupe de l'utilisateur sont non vide
     if (currentUser !== null && currentUser.groupId !== null) {
         // Condition qui vérifie si le groupe de l'utilisateur à la permission
         if (await ServerModule_1.prisma.groupes.findFirst({
-            where: { id: currentUser.groupId, MngGrp: true },
+            where: { id_Groupes: currentUser.groupId, MngGrp: true },
         })) {
             //Récupère les informations de l'utilisateur qui va être supprimé
             const { userEmail } = req.body;

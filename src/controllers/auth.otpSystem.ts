@@ -21,7 +21,7 @@ const GenerateOTP = async (res: Response) => {
     const currentUser = res.locals.principal;
     //Vérifie si l'utilisateur existe dans la DB
     const currentUserData = await prisma.user.findUnique({
-      where: { id: currentUser },
+      where: { id_User: currentUser },
     });
 
     //Condition qui vérifie si l'utilisateur existe dans la DB
@@ -47,7 +47,7 @@ const GenerateOTP = async (res: Response) => {
 
     //Met a jour l'utilisateur en rajoutant la clé de base 32 et le fournisseur
     await prisma.user.update({
-      where: { id: currentUser },
+      where: { id_User: currentUser },
       data: {
         otp_auth_url: otpauth_url,
         otp_base32: base32_secret,
@@ -72,7 +72,9 @@ async function getUserAndCheckIfExists(res: Response) {
   // Récupère l'utilisateur connecté
   const currentUser = res.locals.principal;
   // Recherche l'utilisateur dans la DB pour vérifier s'il existe
-  const user = await prisma.user.findUnique({ where: { id: currentUser } });
+  const user = await prisma.user.findUnique({
+    where: { id_User: currentUser },
+  });
   // Condition qui vérifie si l'utilisateur existe
   if (!user) {
     res.status(401).json({
@@ -121,7 +123,7 @@ const VerifyOTP = async (req: Request, res: Response) => {
     }
     //Met à jour l'utilisateur dans la DB
     const updatedUser = await prisma.user.update({
-      where: { id: currentUser },
+      where: { id_User: currentUser },
       data: {
         otp_enabled: true,
         otp_verified: true,
@@ -132,7 +134,7 @@ const VerifyOTP = async (req: Request, res: Response) => {
     res.status(200).json({
       otp_verified: true,
       user: {
-        id: updatedUser.id,
+        id: updatedUser.id_User,
         name: updatedUser.name,
         email: updatedUser.email,
         otp_enabled: updatedUser.otp_enabled,
@@ -196,7 +198,9 @@ const DisableOTP = async (res: Response) => {
     const currentUser = res.locals.principal;
 
     //Vérifie si l'utilisateur existe dans la DB
-    const user = await prisma.user.findUnique({ where: { id: currentUser } });
+    const user = await prisma.user.findUnique({
+      where: { id_User: currentUser },
+    });
     if (!user) {
       return res.status(401).json({
         status: "Unauthorized",
@@ -206,7 +210,7 @@ const DisableOTP = async (res: Response) => {
 
     //Met à jour l'utilisateur dans la DB
     const updatedUser = await prisma.user.update({
-      where: { id: currentUser },
+      where: { id_User: currentUser },
       data: {
         otp_enabled: false,
       },
@@ -215,7 +219,7 @@ const DisableOTP = async (res: Response) => {
     res.status(200).json({
       otp_disabled: true,
       user: {
-        id: updatedUser.id,
+        id: updatedUser.id_User,
         name: updatedUser.name,
         email: updatedUser.email,
         otp_enabled: updatedUser.otp_enabled,

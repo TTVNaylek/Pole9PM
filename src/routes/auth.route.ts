@@ -25,25 +25,25 @@ router.post("/otp/validate", authOtpSystem.ValidateOTP);
 router.post("/otp/disable", authOtpSystem.DisableOTP);
 
 //Autres
-//router.post("/p9pm/services_list", authController.);
-//router.post("/p9pm/settings", authController.);
+//router.post("/p9pm/receive_los", .);
+//router.post("/p9pm/settings", .);
 
 //Admin
-//router.post("/admin/pass_generator", authController.);
-//router.post("/admin/dashboard", authController.);
-//router.post("/admin/history", authController.);
+//router.post("/admin/dashboard", .);
+//router.post("/admin/history", .);
 
 router.post("/p9pm_admin/add_service", adminServices.AddService);
 router.patch("/p9pm_admin/edit_service", adminServices.EditService);
 router.delete("/p9pm_admin/delete_service", adminServices.DeleteService);
+router.post("/p9pm_admin/link_service", adminServices.LinkGroupeService);
 
 //Gestion des comptes
-router.post("/auth/add_account", authController.AddUserAccount);
-router.patch("/auth/edit_account", authController.EditUserAccount);
-router.delete("/auth/delete_account", authController.DeleteUserAccount);
+router.post("/p9pm_admin/add_account", authController.AddUserAccount);
+router.patch("/p9pm_admin/edit_account", authController.EditUserAccount);
+router.delete("/p9pm_admin/delete_account", authController.DeleteUserAccount);
 
 //Gestion des groupes
-router.post("/group/add_group", adminGroupes.AddGroup);
-router.patch("/group/edit_group", adminGroupes.EditGroup);
-router.delete("/group/delete_group", adminGroupes.DeleteGroup);
+router.post("/p9pm_admin/add_group", adminGroupes.AddGroup);
+router.patch("/p9pm_admin/edit_group", adminGroupes.EditGroup);
+router.delete("/p9pm_admin/delete_group", adminGroupes.DeleteGroup);
 export default router;
