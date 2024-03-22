@@ -1,4 +1,4 @@
-//Titre : auth.controller
+//Titre : Auth Controller
 //Description : Module controller pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
 //Version 0.5

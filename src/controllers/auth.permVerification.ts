@@ -17,7 +17,7 @@ const validateWebToken = async (token: string) => {
     const dbToken = await prisma.userToken.findFirst({
       where: { token: token },
     });
-    //S'il n'est pas présent on s'arrete ici
+    //S'il n'est pas présent, on s'arrête ici
     if (!dbToken) {
       return null;
     }

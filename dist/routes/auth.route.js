@@ -2,7 +2,7 @@
 //Titre: Auth Routes
 //Description : Module de routes pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
-//Version 0.5
+//Version 0.6
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -12,6 +12,7 @@ const auth_controller_1 = __importDefault(require("../controllers/auth.controlle
 const admin_services_1 = __importDefault(require("../controllers/admin.services"));
 const auth_otpSystem_1 = __importDefault(require("../controllers/auth.otpSystem"));
 const admin_groupes_1 = __importDefault(require("../controllers/admin.groupes"));
+const user_actions_1 = __importDefault(require("../controllers/user.actions"));
 const router = express_1.default.Router();
 //Routes pour les requêtes de l'API REST
 //Authentification
@@ -23,7 +24,7 @@ router.post("/otp/verify", auth_otpSystem_1.default.VerifyOTP);
 router.post("/otp/validate", auth_otpSystem_1.default.ValidateOTP);
 router.post("/otp/disable", auth_otpSystem_1.default.DisableOTP);
 //Autres
-//router.post("/p9pm/services_list", .);
+router.get("/p9pm/receive_los", user_actions_1.default.SendLOS);
 //router.post("/p9pm/settings", .);
 //Admin
 //router.post("/admin/dashboard", .);

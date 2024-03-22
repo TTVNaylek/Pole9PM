@@ -1,7 +1,7 @@
-//Titre: Services
+//Titre: Admin Services
 //Description : Module des services pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
-//Version 0.1
+//Version 0.2
 
 import crypto from "crypto";
 import { Request, Response } from "express";

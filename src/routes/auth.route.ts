@@ -1,14 +1,14 @@
 //Titre: Auth Routes
 //Description : Module de routes pour le gestionnaire de mots de passe pour l'association Pole9
 //Author: Kelyan D.
-//Version 0.5
+//Version 0.6
 
 import express from "express";
 import authController from "../controllers/auth.controller";
 import adminServices from "../controllers/admin.services";
 import authOtpSystem from "../controllers/auth.otpSystem";
-import adminGroupe from "../controllers/admin.groupes";
 import adminGroupes from "../controllers/admin.groupes";
+import userActions from "../controllers/user.actions";
 
 const router = express.Router();
 
@@ -25,7 +25,7 @@ router.post("/otp/validate", authOtpSystem.ValidateOTP);
 router.post("/otp/disable", authOtpSystem.DisableOTP);
 
 //Autres
-//router.post("/p9pm/receive_los", .);
+router.get("/p9pm/receive_los", userActions.SendLOS);
 //router.post("/p9pm/settings", .);
 
 //Admin
